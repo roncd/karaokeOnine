@@ -1,5 +1,4 @@
 # TEST
-# ─── Stage 1 : Build ───────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -16,7 +15,6 @@ COPY . .
 # Build de production
 RUN npm run build
 
-# ─── Stage 2 : Serve ───────────────────────────────────────────────────────────
 FROM nginx:stable-alpine AS production
 
 # Copie du build React vers le dossier servi par nginx
