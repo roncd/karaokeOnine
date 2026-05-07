@@ -11,17 +11,18 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 
 
 ## Explications du flux GitOps
-[Dev ouvre PR de branch feature/xxx vers staging] 
+#### [Dev ouvre PR branch feature/xxx vers staging] 
 * review du code par un autre membre de l'équipe + validation.
 * ci.yml se déclenche automatiquement (effectue les tests).
 
-[Merge automatique de branch feature vers staging]
+
+#### [Merge automatique branch feature vers staging]
 * deploy.yml se déclenche automatiquement (staging).
-    1. Build l'image Docker.
-    2. Met à jour le fichier ops/overlays/staging/.env avec le nouveau tag.
-    3. Déploie sur le serveur staging.
+    1) Build l'image Docker.
+    2) Met à jour le fichier ops/overlays/staging/.env avec le nouveau tag.
+    3) Déploie sur le serveur staging.
 
 
-[Ouverture manuelle PR de branch staging vers main]
-* vérification manuelle que déploiement staging fonctionne + validation. 
+#### [Ouverture manuelle PR branch staging vers main]
+* vérification manuelle que déploiement staging fonctionne + validation. 
 * deploy.yml se déclenche automatiquement (prod).
