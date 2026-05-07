@@ -24,5 +24,5 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 
 
 #### [Ouverture manuelle PR branch staging vers main]
-* vérification manuelle que déploiement staging fonctionne + validation. 
+* vérification manuelle du bon fonctionnement du déploiement staging + validation. 
 * deploy.yml se déclenche automatiquement (prod).
