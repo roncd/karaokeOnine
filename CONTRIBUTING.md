@@ -10,7 +10,7 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 * Une PR nécessite au moins une review d'un autre membre avant merge.
 
 
-## Explications du flux GitOps
+## Fonctionnement du flux GitOps
 #### [Dev ouvre PR branch feature/xxx vers staging] 
 * review du code par un autre membre de l'équipe + validation.
 * ci.yml se déclenche automatiquement (effectue les tests).
