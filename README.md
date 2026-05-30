@@ -1,6 +1,6 @@
 # Karaoké O'nine
 Projet GitOps - Petite plateforme de karaoké en salle.
-[Cahier des charges](Fiche-Projet-DevOps.pdf)
+[Cahier des charges](docs/Fiche-Projet-DevOps.pdf)
 Réalisé par Rosalie NICAUD, Laetitia TANOH, Marie Paule Yvette LOKO et Doryan VOUSEMER.
 
 ## Workflow
@@ -15,6 +15,7 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 * Une PR nécessite au moins une review d'un autre membre avant merge.
 * Avant de créer une branche, toujours faire un `git pull`.
 * Supprimer la branche `feature/` après merge.
+* Ne pas push de données sensibles.
 
 ### Branches 
 * `main` : stable, code prêt pour la production
@@ -46,6 +47,6 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 
 #### [Ouverture manuelle PR branch staging vers main]
 * vérification manuelle du bon fonctionnement du déploiement staging + validation. 
-* deploy.yml se déclenche automatiquement (prod).
+* cd.yml se déclenche automatiquement (prod).
 
 ## Choix des technologies 
