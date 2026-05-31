@@ -50,3 +50,6 @@ Suivez les règles suivantes lorsque vous effectuez des modifications sur le rep
 * cd.yml se déclenche automatiquement (prod).
 
 ## Choix des technologies 
+* `frontend`: React
+* `backend`: Node Express
+* `database`: PostgreSQL
