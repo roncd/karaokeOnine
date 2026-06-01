@@ -5,7 +5,7 @@
 ```bash
 psql --version
 ```
-## Création de la base de donnée en local 
+## Création de la base de données en local 
 * Entrez les commandes suivantes dans le terminal 
 ```bash
 # Connexion à PostgreSQL
