@@ -6,7 +6,7 @@ Installer :
 * [Git](https://git-scm.com/)
 
 ### Installation des dépendances 
-A partir de la racine du projet, se deplacer dans ``frontend/` puis, installez les dependances : 
+À partir de la racine du projet, déplacez-vous dans `frontend/` puis installez les dépendances : 
 ```bash
 cd frontend
 npm install
@@ -24,21 +24,21 @@ Dans le terminal s'affiche normalement un QR code.
 
 ### Etape 3 : Scanner le QR code
 * Scannez les QR code sur son mobile.
-> Pour que cela fonctionne il faut que le mobile et l'ordinateur soit connextés au même réseau Wi-Fi.
+> Pour que cela fonctionne il faut que le mobile et l'ordinateur soit connectés au même réseau Wi-Fi.
 
 ### Etape 4 : L'application se lance
 * L'application se lance sur Expo Go automatiquement. Le code se recharge en temps réel lors de modification.
 
 ## Lancer l'application sur le serveur web
 ### Etape 1 : Lancer le serveur web
-A partir de `frontend/` entrez la commande suivante : 
+À partir de `frontend/` entrez la commande suivante : 
 ```bash
 npx expo start --web
 ```
 
 ### Etape 2 : Accéder à l'application 
 Le navigateur s'ouvre automatiquement sur `http://localhost:8081`.
-Si le navigateur ne s'ouvre pas automatiquement, allez manuellement sur :  `http://localhost:8081` via le navigateur.
+Si le navigateur ne s'ouvre pas automatiquement, allez manuellement sur :  `http://localhost:8081` via le navigateur.
 
 ### Build web statique (pour production)
 Pour générer les fichiers statiques de la production : 
