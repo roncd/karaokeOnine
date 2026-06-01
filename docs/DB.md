@@ -21,14 +21,10 @@ CREATE DATABASE karaoke_dev;
 ```bash
 psql -U postgres -d karaoke_dev -f backend/src/db/migrations/init.sql
 ```
-* Autres commandes utile dans le shell psql 
-```bash
-#Liste les bases de données
-\l 
-# Liste les tables de la base de données
-\dt
-#Voir une table 
-\d nom_de_table
-#Quitter le shell psql
-\q
-```
+## Commandes utiles (shell psql) 
+| Commande | Action |
+|---|---|
+| `\l` | Liste les bases de données |
+| `\dt` | Liste les tables de la base de données |
+| `\d nom_de_table` | Voir une table |
+| `\q` | Quitter le shell psql |
