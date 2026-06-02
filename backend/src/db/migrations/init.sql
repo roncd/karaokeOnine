@@ -20,13 +20,13 @@ CREATE TABLE IF NOT EXISTS song (
     id SERIAL PRIMARY KEY, --id automatique
     titre VARCHAR(100) NOT NULL,
     artiste VARCHAR(100) NOT NULL,
-    genre VARCHAR(50),
-    duree INTEGER,
-    annee INTEGER
+    genre VARCHAR(50) NOT NULL,
+    duree INTEGER NOT NULL,
+    annee INTEGER NOT NULL
 );
 
 -- Table FILE D'ATTENTE
-CREATE TABLE IF NOT EXISTS vote_skip (
+CREATE TABLE IF NOT EXISTS queue (
     id SERIAL PRIMARY KEY, --id automatique
     salon_id INTEGER NOT NULL REFERENCES salon(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES utilisateur(id),
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS vote_skip (
 );
 
 -- Table VOTE SKIP
-CREATE TABLE IF NOT EXISTS queue (
+CREATE TABLE IF NOT EXISTS vote_skip (
     id SERIAL PRIMARY KEY, --id automatique
     salon_id INTEGER NOT NULL REFERENCES salon(id) ON DELETE CASCADE,
     queue_id INTEGER NOT NULL REFERENCES queue(id) ON DELETE CASCADE,
