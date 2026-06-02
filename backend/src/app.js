@@ -1,8 +1,11 @@
 require('dotenv').config()
+require('./db/db'); 
 const express = require('express');
 const cors= require('cors');
-const PORT = process.env.PORT || 3000 
+const PORT = process.env.PORT || 3000
 const salonRoutes = require('./routes/salon');
+const userRoutes = require('./routes/user');
+
 
 const app = express();
 app.use(cors());
@@ -15,6 +18,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/salons', salonRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(PORT, () => {
     console.log(`Le serveur a démarré sur le port: ${PORT}`)
