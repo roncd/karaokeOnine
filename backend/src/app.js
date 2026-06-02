@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 3000
 const salonRoutes = require('./routes/salon');
 const userRoutes = require('./routes/user');
 const songRoutes = require('./routes/song');
+const queueRoutes = require('./routes/queue');
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.get('/health', (req, res) => {
 app.use('/api/salons', salonRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/songs', songRoutes);
+app.use('/api/queues', queueRoutes);
 
 app.listen(PORT, () => {
     console.log(`Le serveur a démarré sur le port: ${PORT}`)
