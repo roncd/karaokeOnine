@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/db');
 
+// POST /api/songs -> création morceau
+router.post('/', async (req, res) => {
+  try {
+    const { titre, artiste, genre, duree, annee } = req.body;
+    const result = await pool.query(
+      `INSERT INTO song (titre, artiste, genre, duree, annee) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+       [titre, artiste, genre, duree, annee]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET api/songs -> voir tous les morceaux 
 router.get('/', async (req, res) => {
     try {
