@@ -7,8 +7,8 @@ router.post('/', async (req, res) => {
   try {
     const { salon_id, user_id, song_id, position } = req.body;
     const result = await pool.query(
-        `INSERT INTO queue (salon_id, user_id, song_id, position)
-        VALUES ($1, $2, $3, $4) RETURNING *`,
+        `INSERT INTO queue (salon_id, user_id, song_id, position, status)
+        VALUES ($1, $2, $3, $4, 'En attente') RETURNING *`,
         [salon_id, user_id, song_id, position]
     );
     res.status(201).json(result.rows[0]);

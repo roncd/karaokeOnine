@@ -35,7 +35,7 @@ router.get('/:salon_id', async (req, res) => {
       [req.params.salon_id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Aucun participant trouvé.' });
+      return res.status(404).json({ error: 'Aucun participant trouvé dans le salon.' });
     }
     res.json(result.rows);
   } catch (err) {
