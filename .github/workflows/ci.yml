@@ -1,1 +1,71 @@
-#Tests sur PR
+---
+# Automatisation des tests Jest, qualité du code
+name: CI - Tests
+
+on:
+  pull_request:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test-backend:
+    name: Tests backend
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ${{ secrets.DB_NAME_TEST}}
+          POSTGRES_USER: ${{ secrets.DB_USER}}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD}}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Debug secrets
+        run: |
+          echo "DB_NAME_TEST is set: ${{ secrets.DB_NAME_TEST != '' }}"
+          echo "TEST_DB_URL is set: ${{ secrets.TEST_DB_URL != '' }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run migrations database
+        working-directory: backend
+        env:
+          TEST_DB_URL: ${{ secrets.TEST_DB_URL}}
+        run: psql "$TEST_DB_URL" -f src/db/migrations/init.sql
+
+      - name: Run tests unitaires
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          TEST_DB_URL: ${{ secrets.TEST_DB_URL}}
+        run: npm test
