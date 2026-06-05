@@ -1,14 +1,15 @@
+---
 # Deploiement automatique
 name: CD - Deploy
 
-on: 
-  pull_request: 
+on:
+  pull_request:
     branches: [staging, main]
 
-permissions: 
+permissions:
   contents: read
 
-concurrency: 
+concurrency:
   group: cd-${{ github.ref }}
   cancel-in-progress: true
 
