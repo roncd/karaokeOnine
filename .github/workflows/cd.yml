@@ -1,1 +1,25 @@
-#Deploiement automatique
+# Deploiement automatique
+name: CD - Deploy
+
+on: 
+  pull_request: 
+    branches: [staging, main]
+
+permissions: 
+  contents: read
+
+concurrency: 
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  placeholder:
+    name: CD placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
