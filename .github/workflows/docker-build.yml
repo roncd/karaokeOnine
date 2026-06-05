@@ -1,0 +1,119 @@
+#Tests build, qualité de l'image
+name: Docker Build
+
+on: 
+  push:
+    branches:
+      - 'feature/**'
+    paths: 
+      - "Dockerfile"
+      - "**/Dockerfile"
+      - "**/*.dockerfile"
+      - "**/docker-compose.yml"
+      - "**/compose.yml"
+      - ".github/workflows/**"
+  pull_request: 
+    branches: [staging, main]
+    paths: 
+      - "Dockerfile"
+      - "**/Dockerfile"
+      - "**/*.dockerfile"
+      - "**/docker-compose.yml"
+      - "**/compose.yml"
+      - ".github/workflows/**"
+
+permissions: 
+  contents: read
+
+concurrency: 
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+  
+env: 
+  IMAGE_TAG: pr-${{ github.event.pull_request.number || github.run_number }}
+
+jobs: 
+  build-backend:
+    name: Docker build + smoke test (backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name : Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with: 
+          context: backend
+          file: backend/Dockerfile
+          push: false
+          load: true
+          tags: karaoke-backend:${{ env.IMAGE_TAG }}
+          build-args: |
+            BUILD_VERSION=${{ env.IMAGE_TAG }}
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha
+          cache-to: type=gha, mode=max
+
+      - name: Run backend container
+        run: | 
+          docker run --detach \
+          --name karaoke-backend \
+          --publish  3000:3000 \
+          --env NODE_ENV=ci \
+          --env DB_URL=${{ secrets.DB_URL}} \
+          karaoke-backend:${{ env.IMAGE_TAG }}
+
+      - name: Healthcheck
+        run: | 
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:3000/health; then
+              echo "Service is healthy."
+              exit 0
+            fi
+            echo "Waiting... attempt ${attempt}"
+            sleep 2
+          done
+          docker logs karaoke-backend 
+          exit 1
+
+      - name: Show container logs
+        if: always()
+        run: docker logs karaoke-backend || true
+
+      - name: Stop container
+        if: always()
+        run: docker rm --force karaoke-backend || true
+
+  build-frontend: 
+    name: Docker build frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps: 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with: 
+          context: frontend
+          file: frontend/Dockerfile
+          push: false
+          load: true
+          tags: karaoke-frontend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
