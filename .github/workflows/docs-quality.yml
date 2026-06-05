@@ -68,14 +68,14 @@ jobs:
 
       - name: Lint YAML files
         run: |
-         mapfile -t files < <(git ls-files "*.yml" "*.yaml")
+          mapfile -t files < <(git ls-files "*.yml" "*.yaml")
 
-         if [ "${#files[@]}" -eq 0]; then
-          echo "No YAML files found."
-          exit 0
-         fi
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No YAML files found."
+            exit 0
+          fi
 
-         yamllint "${files[@]}"
+          yamllint "${files[@]}"
 
   workflows:
     name: Github Actions Quality
