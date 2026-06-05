@@ -2,14 +2,6 @@
 name: Docs Quality
 
 on: 
-  push:
-    branches:
-      - 'feature/**'
-    paths:
-      - "**/*.md"
-      - "**/*.yml"
-      - "**/*.yaml"
-      - ".github/**"
   pull_request: 
     branches: [staging, main]
     paths:
@@ -37,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with: 
           node-version: "20"
       
@@ -62,7 +54,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -78,7 +70,7 @@ jobs:
         run: |
          mapfile -t files < <(git ls-files "*.yml" "*.yaml")
 
-         if ["${#files[@]}" -eq 0]; then
+         if [ "${#files[@]}" -eq 0]; then
           echo "No YAML files found."
           exit 0
          fi
@@ -92,7 +84,7 @@ jobs:
 
     steps: 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
 
     - name: Install actionlint
       run: |
