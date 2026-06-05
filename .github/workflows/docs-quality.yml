@@ -84,14 +84,15 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4.2.2
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
 
-    - name: Install actionlint
-      run: |
-        cd "$RUNNER_TEMP"
-        bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+      - name: Install actionlint
+        run: |
+          cd "$RUNNER_TEMP"
+          bash <(curl -fsSL \
+            https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
 
-    - name: Lint workflows
-      run: |
-        "$RUNNER_TEMP/actionlint" -color
+      - name: Lint workflows
+        run: |
+          "$RUNNER_TEMP/actionlint" -color
