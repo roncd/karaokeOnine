@@ -2,9 +2,6 @@
 name: CI - Tests
 
 on: 
-  push:
-    branches:
-      - 'feature/**'
   pull_request: 
     branches: [staging, main]
 
@@ -40,11 +37,16 @@ jobs:
           --health-retries 5
    
     steps: 
+      - name: Debug secrets
+        run: |
+          echo "DB_NAME is set: ${{ secrets.DB_NAME != '' }}"
+          echo "TEST_DB_URL is set: ${{ secrets.TEST_DB_URL != '' }}"
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with: 
           node-version: 20
           cache: 'npm'
@@ -58,7 +60,7 @@ jobs:
         working-directory: backend
         env: 
           TEST_DB_URL: ${{ secrets.TEST_DB_URL}}
-        run: psql $TEST_DB_URL -f src/db/migrations/init.sql
+        run: psql "$TEST_DB_URL" -f src/db/migrations/init.sql
 
       - name: Run tests unitaires
         working-directory: backend
