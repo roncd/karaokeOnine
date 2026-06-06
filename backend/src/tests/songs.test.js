@@ -32,6 +32,46 @@ describe('POST /api/songs', () => {
         expect(res.body.annee).toBe(2011)
         expect(res.body.id).toBeDefined()
     })
+
+    test('Retourne erreur 400 si titre est manquant', async () => {
+        const res = await request(app).post('/api/songs')
+        .send({ artiste: 'Beyoncé', genre: 'Pop', duree: 260, annee: 2011 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+     test('Retourne erreur 400 si artiste est manquant', async () => {
+        const res = await request(app).post('/api/songs')
+        .send({ titre: 'Run the world (Girls)', genre: 'Pop', duree: 260, annee: 2011 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+     test('Retourne erreur 400 si genre est manquant', async () => {
+        const res = await request(app).post('/api/songs')
+        .send({ titre: 'Run the world (Girls)', artiste: 'Beyoncé', duree: 260, annee: 2011 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+     test('Retourne erreur 400 si duree est manquant', async () => {
+        const res = await request(app).post('/api/songs')
+        .send({ titre: 'Run the world (Girls)', artiste: 'Beyoncé', genre: 'Pop', annee: 2011 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+     test('Retourne erreur 400 si annee est manquant', async () => {
+        const res = await request(app).post('/api/songs')
+        .send({ titre: 'Run the world (Girls)', artiste: 'Beyoncé', genre: 'Pop', duree: 260 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
 })
 
 // GET /api/songs/

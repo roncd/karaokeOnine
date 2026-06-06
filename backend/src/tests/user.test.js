@@ -9,8 +9,8 @@ beforeEach(async () => {
     await pool.query('DELETE FROM utilisateur')
     await pool.query('DELETE FROM salon')
     await pool.query('DELETE FROM vote_skip')
-
 })
+
 // Ferme la connexion après tous les tests
 afterAll(async () => {
     await pool.end()
@@ -18,12 +18,19 @@ afterAll(async () => {
 
 // POST /api/users
 describe('POST /api/users', () => {
+    let salon_id;
+
+    beforeEach(async () => {
+        const salon = await pool.query(
+            `INSERT INTO salon (code, status) VALUES ($1, 'En attente') RETURNING *`,
+            ['TEST01']
+        );
+        salon_id = salon.rows[0].id;
+    });
     test('Créer un utilisateur dans un salon', async () => {
-        const salon = await request(app).post('/api/salons')
-        const salon_id = salon.body.id
         const res = await request(app)
             .post('/api/users')
-            .send({ salon_id, "pseudo": 'test', "role": 'Invité' })
+            .send({ salon_id: salon_id, "pseudo": 'test', "role": 'Invité' })
 
         expect(res.statusCode).toBe(201)
         expect(res.body.salon_id).toBe(salon_id)
@@ -38,6 +45,30 @@ describe('POST /api/users', () => {
 
         expect(res.statusCode).toBe(404)
         expect(res.body.error).toBe('Salon introuvable')
+    })
+
+    test('Retourne erreur 400 si salon_id est manquant', async () => {
+        const res = await request(app).post('/api/users')
+            .send({ "pseudo": 'test', "role": 'Invité' })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+    test('Retourne erreur 400 si pseudo est manquant', async () => {
+        const res = await request(app).post('/api/users')
+            .send({ salon_id: salon_id, "role": 'Invité' })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+    test('Retourne erreur 400 si role est manquant', async () => {
+        const res = await request(app).post('/api/users')
+            .send({ salon_id: salon_id, "pseudo": 'test' })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
     })
 })
 
