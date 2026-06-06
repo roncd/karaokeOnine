@@ -67,5 +67,8 @@ jobs:
         working-directory: backend
         env:
           NODE_ENV: test
-          TEST_DB_URL: ${{ secrets.TEST_DB_URL}}
+          TEST_DB_URL: ${{ secrets.TEST_DB_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          LIVEKIT_URL: ws://localhost:7880
         run: npm test
