@@ -6,6 +6,12 @@ const pool = require('../db/db');
 router.post('/', async (req, res) => {
   try {
     const { salon_id, pseudo, role } = req.body;
+    
+    // Vérif champs obligatoire
+    if (!salon_id || !pseudo || !role) {
+      return res.status(400).json({ error: 'salon_id, pseudo et role sont obligatoires' });
+    }
+
     // Vérification de l'existance du salon
     const salon = await pool.query('SELECT * FROM salon where id = $1', [salon_id]);
     if (salon.rows.length === 0){

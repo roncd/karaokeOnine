@@ -8,6 +8,12 @@ module.exports = router;
 router.post('/', async (req, res) => {
   try {
     const { salon_id, queue_id, user_id } = req.body;
+    
+    // Vérif champs obligatoire
+    if (!salon_id || !queue_id || !user_id) {
+      return res.status(400).json({ error: 'salon_id, queue_id et user_id sont obligatoires' });
+    }
+
     const result = await pool.query(
         `INSERT INTO vote_skip (salon_id, queue_id, user_id)
         VALUES ($1, $2, $3) RETURNING *`,
