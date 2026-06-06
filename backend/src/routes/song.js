@@ -6,6 +6,12 @@ const pool = require('../db/db');
 router.post('/', async (req, res) => {
   try {
     const { titre, artiste, genre, duree, annee } = req.body;
+    
+    // Vérif champs obligatoire
+    if (!titre || !artiste || !genre || !duree || !annee) {
+      return res.status(400).json({ error: 'titre, artiste, genre, duree et annee sont obligatoires' });
+    }
+
     const result = await pool.query(
       `INSERT INTO song (titre, artiste, genre, duree, annee) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
        [titre, artiste, genre, duree, annee]
