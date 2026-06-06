@@ -3,6 +3,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
+  if (Platform.OS === 'web'){
+    return <AppNavigator />;
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppNavigator />
