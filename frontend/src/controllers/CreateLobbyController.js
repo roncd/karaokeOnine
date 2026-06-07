@@ -1,37 +1,74 @@
 /**
  * CreateLobbyController.js
- * Generates a lobby ID on mount and handles sharing
+ * Generates a lobby ID on mount, connects socket as host, and navigates to Lobby
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Share } from 'react-native';
+import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
 
+const SOCKET_URL = 'http://localhost:3000'; // Android emulator: 10.0.2.2 | vrai device: IP locale
+
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    setLobbyId(LobbyModel.generateId());
+    const generatedId = LobbyModel.generateId();
+    setLobbyId(generatedId);
+
+    // Connexion socket
+    socketRef.current = io(SOCKET_URL, {
+      transports: ['websocket'],
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('Socket connecté (hôte) :', socketRef.current.id);
+      // Rejoindre la room en tant qu'hôte
+      socketRef.current.emit('join-room', generatedId);
+    });
+
+    socketRef.current.on('connect_error', (err) => {
+      console.warn('Erreur connexion socket :', err.message);
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
   }, []);
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Join my karaoke lobby! Code: ${lobbyId}`,
+        message: `Rejoins mon salon Karaoke O'Nine ! Code : ${lobbyId}`,
       });
     } catch (err) {
       console.warn('Share failed:', err);
     }
   };
 
-  const handleBack = () => navigation.goBack();
+  const handleStart = () => {
+    // Naviguer vers le lobby en tant qu'hôte
+    navigation.navigate('Lobby', {
+      lobbyId,
+      role: 'host',
+      socket: null, // on passe pas le socket en param, on le recrée dans LobbyController
+    });
+  };
+
+  const handleBack = () => {
+    socketRef.current?.disconnect();
+    navigation.goBack();
+  };
 
   return (
     <CreateLobbyView
       lobbyId={lobbyId}
       onBack={handleBack}
       onShare={handleShare}
+      onStart={handleStart}
     />
   );
 }

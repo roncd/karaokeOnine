@@ -10,7 +10,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeController        from '../controllers/HomeController';
 import CreateLobbyController from '../controllers/CreateLobbyController';
 import JoinLobbyController   from '../controllers/JoinLobbyController';
-// import LobbyController    from '../controllers/LobbyController'; // TODO
+import LobbyController    from '../controllers/LobbyController'; // TODO
+import ReadyController from '../controllers/ReadyController';
+import LyricsController from '../controllers/LyricsController';
+import VoteStarController from '../controllers/VoteStarController'
 
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +27,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Home"        component={HomeController} />
         <Stack.Screen name="CreateLobby" component={CreateLobbyController} />
         <Stack.Screen name="JoinLobby"   component={JoinLobbyController} />
-        {/* Add <Stack.Screen name="Lobby" component={LobbyController} /> when ready */}
+        <Stack.Screen name="Lobby" component={LobbyController} />
+        <Stack.Screen name="Ready" component={ReadyController} />
+        <Stack.Screen name="Lyrics" component={LyricsController} />
+        <Stack.Screen name="VoteStar" component={VoteStarController} />
       </Stack.Navigator>
     </NavigationContainer>
   );

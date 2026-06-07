@@ -1,18 +1,22 @@
 /**
  * JoinLobbyController.js
- * Manages join-lobby form state and validation
+ * Valide le code saisi, connecte le socket en tant que participant, navigue vers Lobby
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import JoinLobbyView from '../views/JoinLobbyView';
+
+const SOCKET_URL = 'http://localhost:3000'; // Android emulator: 10.0.2.2 | vrai device: IP locale
 
 export default function JoinLobbyController({ navigation }) {
   const [inputId, setInputId] = useState('');
   const [error, setError]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const socketRef = useRef(null);
 
   const handleChangeId = (text) => {
-    // Keep only alphanumeric, uppercase, max 6 chars
     const cleaned = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
     setInputId(cleaned);
     if (error) setError('');
@@ -24,12 +28,47 @@ export default function JoinLobbyController({ navigation }) {
       setError(validationError);
       return;
     }
-    const normalisedId = LobbyModel.normaliseId(inputId);
-    // TODO: look up the lobby on your backend, then navigate to the lobby screen
-    navigation.navigate('Lobby', { lobbyId: normalisedId, mode: 'guest' });
+
+    const roomCode = LobbyModel.normaliseId(inputId);
+    setLoading(true);
+
+    // Connexion socket
+    socketRef.current = io(SOCKET_URL, {
+      transports: ['websocket'],
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('Socket connecté (participant) :', socketRef.current.id);
+      socketRef.current.emit('join-room', roomCode);
+    });
+
+    // Confirmation que quelqu'un a rejoint (dont nous-mêmes)
+    socketRef.current.on('user-joined', ({ userId }) => {
+      console.log('user-joined reçu :', userId);
+      setLoading(false);
+      // Naviguer vers le lobby en tant que participant
+      navigation.navigate('Lobby', {
+        lobbyId: roomCode,
+        role: 'guest',
+      });
+    });
+
+    socketRef.current.on('room-full', () => {
+      setError('full');
+      setLoading(false);
+  });
+
+    socketRef.current.on('connect_error', (err) => {
+      console.warn('Erreur connexion socket :', err.message);
+      setError('Impossible de se connecter au serveur.');
+      setLoading(false);
+    });
   };
 
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => {
+    socketRef.current?.disconnect();
+    navigation.goBack();
+  };
 
   return (
     <JoinLobbyView
@@ -38,6 +77,7 @@ export default function JoinLobbyController({ navigation }) {
       onJoin={handleJoin}
       onBack={handleBack}
       error={error}
+      loading={loading}
     />
   );
 }
