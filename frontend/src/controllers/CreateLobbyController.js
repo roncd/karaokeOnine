@@ -17,10 +17,14 @@ export default function CreateLobbyController({ navigation }) {
   const socketRef = useRef(null);
 
   useEffect(() => {
+   const createLobby = async () => {
     const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
     const { code } = await response.json();
     setLobbyId(code);
+  };
 
+  createLobby();
+  
     // Connexion socket
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket'],
