@@ -3,9 +3,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
 
-const registerRoomHandlers  = require('./sockets/roomHandler');
+const registerRoomHandlers = require('./sockets/roomHandler');
 const registerQueueHandlers = require('./sockets/queueHandler');
-const registerVoteHandlers  = require('./sockets/voteHandler');
+const registerVoteHandlers = require('./sockets/voteHandler');
 const registerReadyHandlers = require('./sockets/readyHandler');
 const registerVoteStarHandlers = require('./sockets/voteStarHandler');
 const PORT = process.env.PORT || 3000;
@@ -35,7 +35,12 @@ io.on('connection', (socket) => {
   });
 });
 
+// export pour les tests
+module.exports = { httpServer, io };
+
 // Démarrer le serveur
-httpServer.listen(PORT, () => {
-  console.log(`Le serveur a démarré sur le port: ${PORT}`);
-});
+if (require.main === module) {
+  httpServer.listen(PORT, () => {
+    console.log(`Le serveur a démarré sur le port: ${PORT}`);
+  });
+}
