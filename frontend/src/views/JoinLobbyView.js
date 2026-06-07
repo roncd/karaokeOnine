@@ -1,8 +1,8 @@
 /**
  * JoinLobbyView.js
- * Lets the user type a 6-character lobby ID to join
+ * Permet de saisir un code de salon à 6 caractères
  */
-
+import Toast from '../components/Toast';
 import React from 'react';
 import {
   View,
@@ -13,10 +13,13 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Image, 
 } from 'react-native';
 
-export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, error }) {
+export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, error, loading }) {
   return (
+    <>
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.flex}
@@ -24,25 +27,26 @@ export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, err
       >
         <View style={styles.container}>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-              <Text style={styles.backText}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.screenTitle}>Join Lobby</Text>
-            <View style={{ width: 60 }} />
+          {/* Logo */}
+          <Image 
+            source={require('../../assets/logo/logo_karaoke.png')} 
+            style={styles.logo}
+          />
+
+          {/* Titre */}
+          <View style={styles.titleBlock}>
+            <Text style={styles.title}>Rejoindre un salon</Text>
+            <Text style={styles.subtitle}>Entrez un code d'accès à 6 chiffres</Text>
           </View>
 
-          {/* Input area */}
+          {/* Input */}
           <View style={styles.inputBlock}>
-            <Text style={styles.label}>ENTER LOBBY CODE</Text>
-
             <TextInput
               style={[styles.input, error ? styles.inputError : null]}
               value={inputId}
               onChangeText={onChangeId}
-              placeholder="A1B2C3"
-              placeholderTextColor="#333"
+              placeholder="------"
+              placeholderTextColor="rgba(245,230,66,0.3)"
               maxLength={6}
               autoCapitalize="characters"
               autoCorrect={false}
@@ -52,34 +56,42 @@ export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, err
 
             {error ? (
               <Text style={styles.errorText}>{error}</Text>
-            ) : (
-              <Text style={styles.hint}>6 letters / numbers, e.g. K9F2XA</Text>
-            )}
+            ) : null}
           </View>
 
-          {/* Join button */}
+          {/* Bouton valider */}
           <TouchableOpacity
             style={[
               styles.joinBtn,
               inputId.length !== 6 && styles.joinBtnDisabled,
             ]}
             onPress={onJoin}
-            disabled={inputId.length !== 6}
+            disabled={inputId.length !== 6 || loading}
             activeOpacity={0.8}
           >
-            <Text style={styles.joinBtnText}>Join →</Text>
+            {loading ? (
+              <ActivityIndicator color="#0D0D0D" />
+            ) : (
+              <Text style={styles.joinBtnText}>Valider</Text>
+            )}
           </TouchableOpacity>
 
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+   <Toast message={error === 'full' ? 'Veuillez essayer un autre code.' : ''} type="full" />
+    </>
   );
 }
+
+const YELLOW = '#F5E642';
+const BG     = '#0B3D5E';
+const CARD   = '#0D4D72';
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#0D0D0D',
+    backgroundColor: BG,
   },
   flex: { flex: 1 },
   container: {
@@ -87,76 +99,74 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 40,
-    justifyContent: 'space-between',
+    gap: 32,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+
+  // Logo
+  logo: {
+  width: 60,
+  height: 60,
+  resizeMode: 'contain',
+},
+  // Titre
+  titleBlock: {
+    gap: 8,
+    marginTop: 16,
   },
-  backBtn: { width: 60 },
-  backText: { color: '#888', fontSize: 15 },
-  screenTitle: {
-    color: '#F5E642',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
+  title: {
+    color: YELLOW,
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
+  subtitle: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.7,
+  },
+
+  // Input
   inputBlock: {
     flex: 1,
     justifyContent: 'center',
-    gap: 16,
-  },
-  label: {
-    color: '#555',
-    fontSize: 11,
-    letterSpacing: 4,
-    textTransform: 'uppercase',
+    gap: 12,
   },
   input: {
     borderWidth: 1.5,
-    borderColor: '#F5E642',
-    borderRadius: 4,
-    color: '#F5E642',
-    fontSize: 36,
+    borderColor: YELLOW,
+    borderRadius: 8,
+    color: YELLOW,
+    fontSize: 32,
     fontWeight: '900',
-    letterSpacing: 14,
+    letterSpacing: 16,
     textAlign: 'center',
     paddingVertical: 20,
     paddingHorizontal: 16,
-    backgroundColor: '#141414',
+    backgroundColor: CARD,
   },
   inputError: {
     borderColor: '#FF4D4D',
-  },
-  hint: {
-    color: '#444',
-    fontSize: 12,
-    letterSpacing: 1,
-    textAlign: 'center',
   },
   errorText: {
     color: '#FF4D4D',
     fontSize: 13,
     textAlign: 'center',
-    letterSpacing: 0.5,
   },
+
+  // Bouton
   joinBtn: {
-    backgroundColor: '#F5E642',
+    backgroundColor: YELLOW,
     paddingVertical: 18,
-    borderRadius: 4,
+    borderRadius: 8,
     alignItems: 'center',
   },
   joinBtnDisabled: {
-    opacity: 0.3,
+    opacity: 0.35,
   },
   joinBtnText: {
     color: '#0D0D0D',
     fontWeight: '800',
-    fontSize: 16,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    fontSize: 15,
+    letterSpacing: 1,
   },
 });
