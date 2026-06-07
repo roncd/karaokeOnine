@@ -6,10 +6,16 @@ const pool = require('../db/db');
 router.post('/', async (req, res) => {
   try {
     const { salon_id, user_id, song_id, position } = req.body;
+
+    // Vérif données
+    if (!salon_id || !user_id || !song_id || !position) {
+      return res.status(400).json({ error: 'salon_id, user_id, song_id et position sont obligatoires' });
+    }
+
     const result = await pool.query(
-        `INSERT INTO queue (salon_id, user_id, song_id, position, status)
+      `INSERT INTO queue (salon_id, user_id, song_id, position, status)
         VALUES ($1, $2, $3, $4, 'En attente') RETURNING *`,
-        [salon_id, user_id, song_id, position]
+      [salon_id, user_id, song_id, position]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -35,31 +41,40 @@ router.get('/:salon_id', async (req, res) => {
 
 // PATCH api/queue/:id/position : supprimer 1 chanson de la file d'attente
 router.patch('/:id/position', async (req, res) => {
-    const { id } = req.params
-    const {position} = req.body;    
-    try {
-        await pool.query('UPDATE queue SET position = $1 WHERE id = $2', [position, id])
-        res.json({ message: `Le morceau ${id} a changé de position.` })
+  const { id } = req.params
+  const { position } = req.body;
 
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ error: 'Erreur serveur' })
-    }
+  // Vérif données
+  if (!position || position < 1) {
+    return res.status(400).json({ error: 'position doit être un entier positif' });
+  }
+  try {
+    await pool.query('UPDATE queue SET position = $1 WHERE id = $2', [position, id])
+    res.json({ message: `Le morceau ${id} a changé de position.` })
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
 })
 
 
 // DELETE api/queue/:id : supprimer 1 chanson de la file d'attente
 router.delete('/:id', async (req, res) => {
-    const { id } = req.params
+  const { id } = req.params
 
-    try {
-        await pool.query('DELETE FROM queue WHERE id = $1', [id])
-        res.json({ message: `Le morceau ${id} a été supprimé de la file d'attente.` })
-
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ error: 'Erreur serveur' })
+  try {
+    // Vérif que mocreau existe dans file d'attente
+    const check = await pool.query('SELECT * FROM queue WHERE id = $1', [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Morceau introuvable dans la file d\'attente' });
     }
+    await pool.query('DELETE FROM queue WHERE id = $1', [id])
+    res.json({ message: `Le morceau ${id} a été supprimé de la file d'attente.` })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erreur serveur' })
+  }
 })
 
 module.exports = router;

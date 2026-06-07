@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/db');
 
-module.exports = router;
-
 // POST /api/vote-skip -> voter pour skipper la chanson en cours
 router.post('/', async (req, res) => {
   try {
@@ -40,3 +38,5 @@ router.get('/:queue_id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+module.exports = router;

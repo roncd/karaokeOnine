@@ -19,25 +19,34 @@ afterAll(async () => {
 
 // POST /api/queues
 describe('POST /api/queues', () => {
-    test(`Ajouter un morceau à la file d'attente`, async () => {
-        const salon = await request(app).post('/api/salons')
-        const salon_id = salon.body.id
-        const user = await request(app).post('/api/users')
-            .send({ salon_id, pseudo: 'Test', role: 'Invité' })
-        const user_id = user.body.id
-        const song = await request(app).post('/api/songs')
-            .send({
-                titre: 'Run the world (Girls)',
-                artiste: 'Beyoncé',
-                genre: 'Pop',
-                duree: 260,
-                annee: 2011
-            })
-        const song_id = song.body.id
+    let salon_id;
+    let user_id;
+    let song_id;
 
+    beforeEach(async () => {
+        const salon = await pool.query(
+            `INSERT INTO salon (code, status) VALUES ($1, 'En attente') RETURNING *`,
+            ['TEST01']
+        );
+        salon_id = salon.rows[0].id;
+
+        const user = await pool.query(
+            `INSERT INTO utilisateur (salon_id, pseudo, role)
+        VALUES ($1, $2, $3) RETURNING *`,
+            [salon_id, 'pseudo', 'Invité']
+        );
+        user_id = user.rows[0].id;
+
+        const song = await pool.query(
+            `INSERT INTO song (titre, artiste, genre, duree, annee) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            ['Run the world (Girls)', 'Beyoncé', 'Pop', 260, 2011]
+        );
+        song_id = song.rows[0].id;
+    });
+    test(`Ajouter un morceau à la file d'attente`, async () => {
         const res = await request(app)
             .post('/api/queues')
-            .send({ salon_id, user_id, song_id, position: 3 })
+            .send({ salon_id: salon_id, user_id: user_id, song_id: song_id, position: 3 })
 
         expect(res.statusCode).toBe(201)
         expect(res.body.salon_id).toBe(salon_id)
@@ -47,6 +56,40 @@ describe('POST /api/queues', () => {
         expect(res.body.status).toBe('En attente')
         expect(res.body.id).toBeDefined()
     })
+
+    test('Retourne erreur 400 si salon_id est manquant', async () => {
+        const res = await request(app).post('/api/queues')
+            .send({ user_id: user_id, song_id: song_id, "position": 3 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+    test('Retourne erreur 400 si user_id est manquant', async () => {
+        const res = await request(app).post('/api/queues')
+            .send({ salon_id: salon_id, song_id: song_id, "position": 3 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+    test('Retourne erreur 400 si song_id est manquant', async () => {
+        const res = await request(app).post('/api/queues')
+            .send({ salon_id: salon_id, user_id: user_id, "position": 3 })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+    test('Retourne erreur 400 si position est manquant', async () => {
+        const res = await request(app).post('/api/queues')
+            .send({ salon_id: salon_id, user_id: user_id, song_id: song_id })
+
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('error');
+    })
+
+
 })
 
 // GET /queues/:salon_id
