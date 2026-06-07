@@ -1,11 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { io as ioc } from 'socket.io-client';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
+const request = require('supertest')
+const app = require('../app')
+// const pool = require('../db/db')
+// const { io: ioc } = require('socket.io-client');
+//a corriger
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
-import registerRoomHandlers  from '../src/sockets/roomHandler.js';
-import registerQueueHandlers from '../src/sockets/queueHandler.js';
-import registerVoteHandlers  from '../src/sockets/voteHandler.js';
+const registerRoomHandlers  = require('../sockets/roomHandler');
+const registerQueueHandlers = require('../sockets/queueHandler');
+const registerVoteHandlers  = require('../sockets/voteHandler');
 
 let httpServer;
 let ioServer;
