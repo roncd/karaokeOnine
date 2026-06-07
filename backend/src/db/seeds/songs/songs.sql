@@ -10,13 +10,12 @@ INSERT INTO song (titre, artiste, genre, duree, annee) VALUES
 ('Melodrama',         'Disiz et Théodora',     'Pop',                177, 2025),
 ('Finesse',           'Bruno Mars et Cardi B', 'Funk',               207, 2016),
 ('La Foule',          'Edith Piaf',            'Variété française',  203, 1958);
--- ,
--- ('Remember the Time', 'Michael Jackson',       'R&B',                232, 1992),
--- ('Bohemian Rhapsody', 'Queen',                 'Rock',               354, 1975),
--- ('Save Your Tears',   'The Weeknd',            'Pop',                215, 2020),
--- ('Bella Ciao',        'Traditionnel',          'Folk',               180, 1943),
--- ('Blinding Lights',   'The Weeknd',            'Pop',                200, 2019),
--- ('La Vie en Rose',    'Édith Piaf',            'Chanson française',  210, 1947)
+('Remember the Time', 'Michael Jackson',       'R&B',                232, 1992),
+('Bohemian Rhapsody', 'Queen',                 'Rock',               354, 1975),
+('Save Your Tears',   'The Weeknd',            'Pop',                215, 2020),
+('Bella Ciao',        'Traditionnel',          'Folk',               180, 1943),
+('Blinding Lights',   'The Weeknd',            'Pop',                200, 2019),
+('La Vie en Rose',    'Édith Piaf',            'Chanson française',  210, 1947)
 
 
 ALTER TABLE song ADD COLUMN IF NOT EXISTS audio_path VARCHAR(255);
