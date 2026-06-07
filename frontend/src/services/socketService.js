@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
+import { API_URL } from '../config';
 
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = API_URL;;
 
 let socket = null;
 let currentRoom = null;
