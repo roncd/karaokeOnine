@@ -7,8 +7,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import LyricsView from '../views/LyricsView';
 import { getSocket, joinRoom } from '../services/socketService';
+import { API_URL } from '../config';
 
-const API_URL = 'http://localhost:3000/api';
 
 // ─── Parser .lrc ─────────────────────────────────────────────────────────────
 function parseLrc(lrcContent) {
@@ -52,11 +52,11 @@ export default function LyricsController({ route, navigation }) {
   useEffect(() => {
     const loadSong = async () => {
       try {
-        const lyricsRes  = await fetch(`${API_URL}/songs/${songId}/lyrics`);
+        const lyricsRes  = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
         const lyricsData = await lyricsRes.json();
         const parsed     = parseLrc(lyricsData.lyrics);
         setLyrics(parsed);
-        setAudioUri(`${API_URL}/songs/${songId}/audio`);
+        setAudioUri(`${API_URL}/api/songs/${songId}/audio`);
       } catch (err) {
         console.warn('Erreur chargement chanson :', err.message);
       }

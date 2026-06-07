@@ -8,17 +8,23 @@ import { Share } from 'react-native';
 import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
+import { API_URL } from '../config';
 
-const SOCKET_URL = 'http://localhost:3000'; // Android emulator: 10.0.2.2 | vrai device: IP locale
+const SOCKET_URL = API_URL; // Android emulator: 10.0.2.2 | vrai device: IP locale
 
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const generatedId = LobbyModel.generateId();
-    setLobbyId(generatedId);
+   const createLobby = async () => {
+    const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
+    const { code } = await response.json();
+    setLobbyId(code);
+  };
 
+  createLobby();
+  
     // Connexion socket
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket'],
@@ -27,7 +33,7 @@ export default function CreateLobbyController({ navigation }) {
     socketRef.current.on('connect', () => {
       console.log('Socket connecté (hôte) :', socketRef.current.id);
       // Rejoindre la room en tant qu'hôte
-      socketRef.current.emit('join-room', generatedId);
+      socketRef.current.emit('join-room', code);
     });
 
     socketRef.current.on('connect_error', (err) => {

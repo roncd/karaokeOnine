@@ -55,6 +55,7 @@ export default function VoteStarView({
   selectedId,
   winner,
   hasVoted,
+  hostId, 
   onSelect,
   onConfirm,
   onContinue,

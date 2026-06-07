@@ -7,8 +7,9 @@ import React, { useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import JoinLobbyView from '../views/JoinLobbyView';
+import { API_URL } from '../config';
 
-const SOCKET_URL = 'http://localhost:3000'; // Android emulator: 10.0.2.2 | vrai device: IP locale
+const SOCKET_URL = API_URL;; // Android emulator: 10.0.2.2 | vrai device: IP locale
 
 export default function JoinLobbyController({ navigation }) {
   const [inputId, setInputId] = useState('');
