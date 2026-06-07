@@ -1,0 +1,95 @@
+/**
+ * ReadyController.js
+ * Gère le compte à rebours avant de chanter
+ * Reçoit : lobbyId, role, singerId, currentSong, songId depuis la navigation
+ */
+
+import React, { useEffect, useRef, useState } from 'react';
+import ReadyView from '../views/ReadyView';
+import { getSocket, joinRoom } from '../services/socketService';
+
+const COUNTDOWN = 10;
+
+export default function ReadyController({ route, navigation }) {
+  const { lobbyId, role, singerId, currentSong, songId } = route.params;
+
+  const socketRef             = useRef(null);
+  const timerRef              = useRef(null);
+  const [timeLeft, setTimeLeft] = useState(COUNTDOWN);
+  const [skipped, setSkipped]   = useState(false);
+  const [isSinger, setIsSinger] = useState(false);
+
+  useEffect(() => {
+    const socket = getSocket();
+    socketRef.current = socket;
+
+    // Rejoindre la room
+    joinRoom(lobbyId);
+
+    // Déterminer si c'est le chanteur
+    if (socket.id === singerId) {
+      setIsSinger(true);
+    }
+
+    socket.on('connect', () => {
+      if (socket.id === singerId) {
+        setIsSinger(true);
+      }
+    });
+
+    // Le chanteur est prêt tout le monde va sur Lyrics
+    socket.on('singer-ready', ({ singerId: readySingerId, currentSong, songId }) => {
+      clearInterval(timerRef.current);
+      navigation.replace('Lyrics', {
+        lobbyId,
+        role,
+        currentSong,
+        singerId: readySingerId,
+        songId,
+      });
+    });
+
+    // Tour skippé (timeout) retour au lobby
+    socket.on('turn-skipped', () => {
+      clearInterval(timerRef.current);
+      setSkipped(true);
+      setTimeout(() => {
+        navigation.replace('Lobby', { lobbyId, role });
+      }, 2000);
+    });
+
+    // Compte à rebours local
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(timerRef.current);
+      socket.off('connect');
+      socket.off('singer-ready');
+      socket.off('turn-skipped');
+    };
+  }, [lobbyId]);
+
+  const handleReady = () => {
+    socketRef.current?.emit('player-ready', { roomCode: lobbyId });
+  };
+
+  return (
+    <ReadyView
+      isSinger={isSinger}
+      currentSong={currentSong}
+      timeLeft={timeLeft}
+      total={COUNTDOWN}
+      skipped={skipped}
+      onReady={handleReady}
+      singerId={singerId}
+    />
+  );
+}
