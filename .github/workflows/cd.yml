@@ -1,9 +1,9 @@
 ---
-# Deploiement automatique
+# Deploiement automatique frontend/backend sur render
 name: CD - Deploy
 
 on:
-  pull_request:
+  push:
     branches: [staging, main]
 
 permissions:
@@ -11,16 +11,119 @@ permissions:
 
 concurrency:
   group: cd-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  placeholder:
-    name: CD placeholder
+  deploy-staging:
+    name: Deploy staging
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/staging'
+
     steps:
-      - name: Checkout repository
+      - name: Checkout app repository
         uses: actions/checkout@v4.2.2
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/karaoke-backend:staging
+          build-args: |
+            BUILD_VERSION=staging-${{ github.sha }}
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/karaoke-frontend:staging
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy backend on Render
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_STAGING_ID }}/deploys" \
+            --json '{}'
+
+      - name: Deploy frontend on Render
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_STAGING_ID }}/deploys" \
+            --json '{}'
+
+      - name: Update IMAGE_TAG in ops repository
+        env:
+          OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
+        run: |
+          git clone https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git
+          cd ops
+          sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=staging/" overlays/staging/.env
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add overlays/staging/.env
+          git commit -m "ci: update staging IMAGE_TAG to staging-${{ github.sha }}"
+          git push
+
+  deploy-prod:
+    name: Deploy prod
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout app repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Deploy backend on Render
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_PROD_ID }}/deploys" \
+            --json '{}'
+
+      - name: Deploy frontend on Render
+        run: |
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_PROD_ID }}/deploys" \
+            --json '{}'
+
+      - name: Update IMAGE_TAG in ops repository
+        env:
+          OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
+        run: |
+          git clone https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git
+          cd ops
+          sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=${{ github.sha }}" overlays/prod/.env
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add overlays/prod/.env
+          git commit -m "ci: update prod IMAGE_TAG to ${{ github.sha }}"
+          git push
+
