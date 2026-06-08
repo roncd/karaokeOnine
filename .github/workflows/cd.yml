@@ -80,21 +80,6 @@ jobs:
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_STAGING_ID }}/deploys" \
             --json '{}'
 
-      - name: Update IMAGE_TAG in ops repository
-        env:
-          OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
-        run: |
-          git clone "https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git"
-          cd karaokeOnine-ops/
-          ls
-          cp overlays/staging/.env.template overlays/staging/.env
-          sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=staging/" "overlays/staging/.env"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add "overlays/staging/.env"
-          git commit -m "ci: update staging IMAGE_TAG to staging-${{ github.sha }}"
-          git push
-
   deploy-prod:
     name: Deploy prod
     runs-on: ubuntu-latest
@@ -120,16 +105,3 @@ jobs:
             --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_PROD_ID }}/deploys" \
             --json '{}'
-
-      - name: Update IMAGE_TAG in ops repository
-        env:
-          OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
-        run: |
-          git clone "https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git"
-          cp overlays/prod/.env.template overlays/prod/.env
-          sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=${{ github.sha }}" "overlays/prod/.env"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add "overlays/prod/.env"
-          git commit -m "ci: update prod IMAGE_TAG to ${{ github.sha }}"
-          git push
