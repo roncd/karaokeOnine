@@ -85,7 +85,6 @@ jobs:
           OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
         run: |
           git clone "https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git"
-          cd ops
           sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=staging/" "overlays/staging/.env"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
@@ -124,7 +123,6 @@ jobs:
           OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
         run: |
           git clone "https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git"
-          cd ops
           sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=${{ github.sha }}" "overlays/prod/.env"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
