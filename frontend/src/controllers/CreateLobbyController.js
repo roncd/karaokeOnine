@@ -10,7 +10,7 @@ import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
 
 const API_URL = 'https://karaoke-backend-latest-oyi2.onrender.com'; // Android emulator: 10.0.2.2 | vrai device: IP locale
-
+const SOCKET_URL = API_URL
 console.log(process.env.EXPO_PUBLIC_API_URL);
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
