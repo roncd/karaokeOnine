@@ -85,11 +85,11 @@ jobs:
           OPS_TOKEN: ${{ secrets.OPS_TOKEN }}
         run: |
           git clone "https://x-access-token:${OPS_TOKEN}@github.com/${{ github.repository_owner }}/karaokeOnine-ops.git"
-          cp overlays/staging/.env.template overlays/staging/.env
+          cp karaokeOnine-ops/overlays/staging/.env.template karaokeOnine-ops/overlays/staging/.env
           sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=staging/" "overlays/staging/.env"
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add "overlays/staging/.env"
+          git add "karaokeOnine-ops/overlays/staging/.env"
           git commit -m "ci: update staging IMAGE_TAG to staging-${{ github.sha }}"
           git push
 
