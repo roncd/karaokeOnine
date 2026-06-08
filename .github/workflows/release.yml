@@ -128,6 +128,8 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:${{ needs.validate-version.outputs.version }}
             ${{ env.FRONTEND_IMAGE }}:latest
+          build-args: |
+            EXPO_PUBLIC_API_URL=${{ secrets.EXPO_PUBLIC_API_URL }}
           labels: |
             org.opencontainers.image.title=Karaoke O'nine frontend
             org.opencontainers.image.version=${{ needs.validate-version.outputs.version }}

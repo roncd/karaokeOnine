@@ -107,5 +107,7 @@ jobs:
           push: false
           load: true
           tags: karaoke-frontend:${{ env.IMAGE_TAG }}
+          build-args: |
+            EXPO_PUBLIC_API_URL=${{ secrets.EXPO_PUBLIC_API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

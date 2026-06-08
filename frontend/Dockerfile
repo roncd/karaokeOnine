@@ -22,6 +22,10 @@ RUN npm ci \
   && npm cache clean --force
 
 FROM dependencies AS builder
+
+ARG EXPO_PUBLIC_API_URL
+ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+
 COPY . .
 
 RUN npx expo export --platform web
