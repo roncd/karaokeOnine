@@ -80,7 +80,6 @@ jobs:
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_STAGING_ID }}/deploys" \
             --json '{}'
 
-
   deploy-prod:
     name: Deploy prod
     runs-on: ubuntu-latest
@@ -106,4 +105,3 @@ jobs:
             --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_PROD_ID }}/deploys" \
             --json '{}'
-
