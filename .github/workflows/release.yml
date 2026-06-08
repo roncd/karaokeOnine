@@ -128,8 +128,6 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:${{ needs.validate-version.outputs.version }}
             ${{ env.FRONTEND_IMAGE }}:latest
-          build-args: |
-            EXPO_PUBLIC_API_URL=${{ secrets.EXPO_PUBLIC_API_URL }}
           labels: |
             org.opencontainers.image.title=Karaoke O'nine frontend
             org.opencontainers.image.version=${{ needs.validate-version.outputs.version }}
@@ -139,6 +137,7 @@ jobs:
             BUILD_VERSION=${{ needs.validate-version.outputs.version }}
             VCS_REF=${{ github.sha }}
             BUILD_DATE=${{ github.event.repository.updated_at }}
+            EXPO_PUBLIC_API_URL=${{ secrets.EXPO_PUBLIC_API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
