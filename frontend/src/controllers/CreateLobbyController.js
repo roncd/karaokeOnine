@@ -12,6 +12,7 @@ import { API_URL } from '../config';
 
 const SOCKET_URL = API_URL; // Android emulator: 10.0.2.2 | vrai device: IP locale
 
+console.log(process.env.EXPO_PUBLIC_API_URL);
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
   const socketRef = useRef(null);
