@@ -8,10 +8,8 @@ import { Share } from 'react-native';
 import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
+import { API_URL } from '../config'
 
-const API_URL = 'https://karaoke-backend-latest-oyi2.onrender.com'; // Android emulator: 10.0.2.2 | vrai device: IP locale
-const SOCKET_URL = API_URL
-console.log(process.env.EXPO_PUBLIC_API_URL);
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
   const socketRef = useRef(null);
@@ -26,7 +24,7 @@ export default function CreateLobbyController({ navigation }) {
   createLobby();
   
     // Connexion socket
-    socketRef.current = io(SOCKET_URL, {
+    socketRef.current = io(API_URL, {
       transports: ['websocket'],
     });
 
