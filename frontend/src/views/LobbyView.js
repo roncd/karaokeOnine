@@ -20,14 +20,14 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   Platform,
-  Image, 
+  Image,
 } from 'react-native';
 
 // ─── Logo étoile O'9 ────────────────────────────────────────────────────────
 function StarLogo({ isHost }) {
   return (
-    <Image 
-  source={require('../../assets/logo/logo_karaoke.png')} 
+    <Image
+      source={require('../../assets/logo/logo_karaoke.png')}
       style={styles.logo}
     />
   );
@@ -53,6 +53,62 @@ function QueueItem({ title, index, isHost }) {
   );
 }
 
+function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const AVATARS = [
+    require('../../assets/avatars/avatar1.png'),
+    require('../../assets/avatars/avatar2.png'),
+    require('../../assets/avatars/avatar3.png'),
+    require('../../assets/avatars/avatar4.png'),
+    require('../../assets/avatars/avatar5.png'),
+    require('../../assets/avatars/avatar6.png'),
+    require('../../assets/avatars/avatar7.png'),
+    require('../../assets/avatars/avatar8.png'),
+
+  ];
+
+  return (
+    <View style={styles.queueRow}>
+      {/* Avatar avec tooltip */}
+      <TouchableOpacity
+        onPressIn={() => setShowTooltip(true)}
+        onPressOut={() => setShowTooltip(false)}
+      >
+        <Image
+          source={AVATARS[item.avatarIndex || 0]}
+          style={styles.queueAvatar}
+        />
+        {showTooltip && (
+          <View style={styles.tooltip}>
+            <Text style={styles.tooltipText}>{item.pseudo}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      {/* Titre */}
+      <Text style={styles.queueTitle} numberOfLines={1}>
+        {item.titre}
+      </Text>
+
+      {/* Boutons hôte */}
+      {isHost && (
+        <View style={styles.hostActions}>
+          <TouchableOpacity onPress={onMoveUp}>
+            <Text style={styles.actionBtn}>↑</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onMoveDown}>
+            <Text style={styles.actionBtn}>↓</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onDelete}>
+            <Text style={styles.actionBtn}>🗑</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Toast notification ──────────────────────────────────────────────────────
 // function Toast({ message, type }) {
 //   if (!message) return null;
@@ -68,10 +124,10 @@ function QueueItem({ title, index, isHost }) {
 // ─── Vue HÔTE : file d'attente ───────────────────────────────────────────────
 function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [songInput, setSongInput]       = useState('');
-  const [songs, setSongs]               = useState([]);
-  const [loading, setLoading]           = useState(false);
-  
+  const [songInput, setSongInput] = useState('');
+  const [songs, setSongs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const handleSearch = async (text) => {
     if (text.trim().length < 2) { setSongs([]); return; }
     setLoading(true);
@@ -141,7 +197,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
       {/* Lancer la chanson */}
       {queue.length > 0 && (
         <TouchableOpacity style={styles.startSongBtn} onPress={onStartSong}>
-            <Text style={styles.startSongBtnText}>▶ Lancer la chanson</Text>
+          <Text style={styles.startSongBtnText}>▶ Lancer la chanson</Text>
         </TouchableOpacity>
       )}
 
@@ -155,79 +211,79 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 
       {/* Modal ajout chanson */}
       <Modal visible={modalVisible} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
 
-              {/* Header */}
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Ajouter une chanson</Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                  <Text style={styles.modalClose}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Barre de recherche */}
-              <TextInput
-                style={styles.searchInput}
-                value={songInput}
-                onChangeText={(text) => {
-                  setSongInput(text);
-                  handleSearch(text);
-                }}
-                placeholder="Rechercher un titre ou artiste..."
-                placeholderTextColor="#555"
-                autoFocus
-              />
-
-              {/* Liste */}
-              {loading ? (
-                <ActivityIndicator color="#F5E642" style={{ marginTop: 24 }} />
-              ) : songs.length === 0 ? (
-                // Je pense pas que ce texte est important,on peut le retirer puisqu'il y a les toast
-                <Text style={styles.emptyText}>
-                  {songInput.length < 2 ? 'Tapez pour rechercher...' : 'Aucune chanson trouvée'}
-                </Text>
-                // Regler le probleme avec les toast
-              ) : (
-                <FlatList
-                  data={songs}
-                  keyExtractor={(item) => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={styles.songItem}
-                      onPress={() => {
-                        onAddSong(item.titre);
-                        setModalVisible(false);
-                        setSongInput('');
-                        setSongs([]);
-                      }}
-                    >
-                      <View style={styles.songItemInfo}>
-                        <Text style={styles.songItemTitle}>{item.titre}</Text>
-                        <Text style={styles.songItemArtiste}>{item.artiste}</Text>
-                      </View>
-                      <Text style={styles.songItemGenre}>{item.genre}</Text>
-                    </TouchableOpacity>
-                  )}
-                  style={styles.songList}
-                />
-              )}
-
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Ajouter une chanson</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
             </View>
+
+            {/* Barre de recherche */}
+            <TextInput
+              style={styles.searchInput}
+              value={songInput}
+              onChangeText={(text) => {
+                setSongInput(text);
+                handleSearch(text);
+              }}
+              placeholder="Rechercher un titre ou artiste..."
+              placeholderTextColor="#555"
+              autoFocus
+            />
+
+            {/* Liste */}
+            {loading ? (
+              <ActivityIndicator color="#F5E642" style={{ marginTop: 24 }} />
+            ) : songs.length === 0 ? (
+              // Je pense pas que ce texte est important,on peut le retirer puisqu'il y a les toast
+              <Text style={styles.emptyText}>
+                {songInput.length < 2 ? 'Tapez pour rechercher...' : 'Aucune chanson trouvée'}
+              </Text>
+              // Regler le probleme avec les toast
+            ) : (
+              <FlatList
+                data={songs}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.songItem}
+                    onPress={() => {
+                      onAddSong(item.titre);
+                      setModalVisible(false);
+                      setSongInput('');
+                      setSongs([]);
+                    }}
+                  >
+                    <View style={styles.songItemInfo}>
+                      <Text style={styles.songItemTitle}>{item.titre}</Text>
+                      <Text style={styles.songItemArtiste}>{item.artiste}</Text>
+                    </View>
+                    <Text style={styles.songItemGenre}>{item.genre}</Text>
+                  </TouchableOpacity>
+                )}
+                style={styles.songList}
+              />
+            )}
+
           </View>
-        </Modal>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 // ─── Vue PARTICIPANT : catalogue ─────────────────────────────────────────────
 const GENRES = [
-  { label: 'Pop',               emoji: '🎵' },
-  { label: 'Rock',              emoji: '🎸' },
+  { label: 'Pop', emoji: '🎵' },
+  { label: 'Rock', emoji: '🎸' },
   // { label: 'Hip-Hop',           emoji: '🎤' },
-  { label: 'R&B',               emoji: '🎶' },
-  { label: 'Soul',              emoji: '🎼' },
-  { label: 'Funk',              emoji: '🕺' },
+  { label: 'R&B', emoji: '🎶' },
+  { label: 'Soul', emoji: '🎼' },
+  { label: 'Funk', emoji: '🕺' },
   { label: 'Variété française', emoji: '🇫🇷' },
   //bug avec les accents dans les genres, à régler plus tard
   //taille de la page a regler, bug
@@ -235,11 +291,11 @@ const GENRES = [
 ];
 
 function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
-  const [songs, setSongs]               = useState([]);
+  const [songs, setSongs] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
-  const [searchText, setSearchText]     = useState('');
-  const [searching, setSearching]       = useState(false);
-  const [loading, setLoading]           = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
   // Charger les chansons d'un genre
@@ -429,58 +485,58 @@ export default function LobbyView({
 
   return (
     <>
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safe}>
+        <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <StarLogo isHost={isHost} />
-        <View style={styles.headerCenter}>
-          <Text style={styles.lobbyCode}>{lobbyId}</Text>
-          <View style={[styles.dot, isConnected ? styles.dotOnline : styles.dotOffline]} />
+        {/* Header */}
+        <View style={styles.header}>
+          <StarLogo isHost={isHost} />
+          <View style={styles.headerCenter}>
+            <Text style={styles.lobbyCode}>{lobbyId}</Text>
+            <View style={[styles.dot, isConnected ? styles.dotOnline : styles.dotOffline]} />
+          </View>
+          <TouchableOpacity onPress={onLeave}>
+            <Text style={styles.leaveText}>Quitter</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={onLeave}>
-          <Text style={styles.leaveText}>Quitter</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Toast chanson skippée */}
-      {skippedSong && (
-        <Toast message={`"${skippedSong}" passé`} type="success" />
-      )}
-
-      {/* Contenu selon rôle */}
-      <View style={styles.content}>
-        {isHost ? (
-          <HostView
-            lobbyId={lobbyId}
-            queue={queue}
-            skipVotes={skipVotes}
-            onVoteSkip={onVoteSkip}
-            onAddSong={onAddSong}
-            userCount={userCount}
-            onStartSong={onStartSong}
-          />
-        ) : (
-          <GuestView
-            queue={queue}
-            skipVotes={skipVotes}
-            onVoteSkip={onVoteSkip}
-            onAddSong={onAddSong}
-            onStartSong={onStartSong}
-          />
+        {/* Toast chanson skippée */}
+        {skippedSong && (
+          <Toast message={`"${skippedSong}" passé`} type="success" />
         )}
-      </View>
-    </SafeAreaView>
-    <Toast message={toastMessage} type="error" />
+
+        {/* Contenu selon rôle */}
+        <View style={styles.content}>
+          {isHost ? (
+            <HostView
+              lobbyId={lobbyId}
+              queue={queue}
+              skipVotes={skipVotes}
+              onVoteSkip={onVoteSkip}
+              onAddSong={onAddSong}
+              userCount={userCount}
+              onStartSong={onStartSong}
+            />
+          ) : (
+            <GuestView
+              queue={queue}
+              skipVotes={skipVotes}
+              onVoteSkip={onVoteSkip}
+              onAddSong={onAddSong}
+              onStartSong={onStartSong}
+            />
+          )}
+        </View>
+      </SafeAreaView>
+      <Toast message={toastMessage} type="error" />
     </>
   );
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const YELLOW = '#F5E642';
-const BG     = '#0B3D5E';
-const CARD   = '#0D4D72';
+const BG = '#0B3D5E';
+const CARD = '#0D4D72';
 
 const styles = StyleSheet.create({
   safe: {
@@ -501,10 +557,10 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-  width: 60,
-  height: 60,
-  resizeMode: 'contain',
-},
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
 
   hostBadge: {
     width: 8,
@@ -529,7 +585,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  dotOnline:  { backgroundColor: '#4ADE80' },
+  dotOnline: { backgroundColor: '#4ADE80' },
   dotOffline: { backgroundColor: '#EF4444' },
   leaveText: {
     color: '#888',
@@ -554,7 +610,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   toastSuccess: { backgroundColor: YELLOW },
-  toastError:   { backgroundColor: YELLOW },
+  toastError: { backgroundColor: YELLOW },
   toastIcon: { fontSize: 16, color: '#0D0D0D', fontWeight: '900' },
   toastText: { color: '#0D0D0D', fontWeight: '700', fontSize: 14 },
 
@@ -829,16 +885,59 @@ const styles = StyleSheet.create({
   },
 
   startSongBtn: {
-  backgroundColor: YELLOW,
-  borderRadius: 8,
-  paddingVertical: 14,
-  alignItems: 'center',
-  marginTop: 12,
-},
-startSongBtnText: {
-  color: '#0D0D0D',
-  fontWeight: '800',
-  fontSize: 14,
-  letterSpacing: 1,
-},
+    backgroundColor: YELLOW,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  startSongBtnText: {
+    color: '#0D0D0D',
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+
+  queueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CARD,
+    borderRadius: 8,
+    padding: 10,
+    gap: 10,
+  },
+  queueAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  queueTitle: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 13,
+  },
+  hostActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionBtn: {
+    fontSize: 16,
+    color: YELLOW,
+    padding: 4,
+  },
+  tooltip: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    backgroundColor: '#0D0D0D',
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    zIndex: 10,
+  },
+  tooltipText: {
+    color: YELLOW,
+    fontSize: 11,
+    fontWeight: '700',
+  },
 });

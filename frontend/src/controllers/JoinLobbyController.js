@@ -5,13 +5,17 @@
 import React, { useState, useRef } from 'react';
 import { LobbyModel } from '../models/LobbyModel';
 import JoinLobbyView from '../views/JoinLobbyView';
+import { API_URL } from '../config';
 import { getSocket, joinRoom } from '../services/socketService';
+import { saveSession } from '../services/sessionService';
 
 export default function JoinLobbyController({ navigation }) {
-  const [inputId, setInputId] = useState('');
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const socketRef = useRef(null);
+  const [inputId, setInputId]         = useState('');
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(false);
+  const [pseudo, setPseudo]           = useState('');
+  const [avatarIndex, setAvatarIndex] = useState(0);
+  const socketRef                     = useRef(null);
 
   const handleChangeId = (text) => {
     const cleaned = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
@@ -34,9 +38,28 @@ export default function JoinLobbyController({ navigation }) {
 
     joinRoom(roomCode);
 
-    socket.once('user-joined', ({ userId }) => {
+    socket.once('user-joined', async ({ userId }) => {
       console.log('user-joined reçu :', userId);
       setLoading(false);
+
+      // Enregistrer l'utilisateur en base
+      try {
+        await fetch(`${API_URL}/api/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            salon_id: roomCode,
+            pseudo,
+            role: 'guest',
+          }),
+        });
+      } catch (err) {
+        console.warn('Erreur création utilisateur :', err.message);
+      }
+
+      // Sauvegarder la session localement
+      await saveSession({ lobbyId: roomCode, role: 'guest' });
+
       navigation.navigate('Lobby', {
         lobbyId: roomCode,
         role: 'guest',
@@ -67,6 +90,10 @@ export default function JoinLobbyController({ navigation }) {
       onBack={handleBack}
       error={error}
       loading={loading}
+      pseudo={pseudo}
+      onChangePseudo={setPseudo}
+      avatarIndex={avatarIndex}
+      onSelectAvatar={setAvatarIndex}
     />
   );
 }

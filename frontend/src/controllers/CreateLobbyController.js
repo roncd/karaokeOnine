@@ -8,11 +8,14 @@ import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
 import { API_URL } from '../config';
 import { getSocket, joinRoom, disconnectSocket } from '../services/socketService';
+import { saveSession } from '../services/sessionService';
 
 export default function CreateLobbyController({ navigation }) {
-  const [lobbyId, setLobbyId] = useState('');
-  const lobbyIdRef = useRef('');
-  const socketRef  = useRef(null);
+  const [lobbyId, setLobbyId]       = useState('');
+  const [pseudo, setPseudo]         = useState('');
+  const [avatarIndex, setAvatarIndex] = useState(0);
+  const lobbyIdRef                  = useRef('');
+  const socketRef                   = useRef(null);
 
   useEffect(() => {
     const socket = getSocket();
@@ -54,11 +57,22 @@ export default function CreateLobbyController({ navigation }) {
     }
   };
 
-  const handleStart = () => {
-    navigation.navigate('Lobby', {
-      lobbyId,
-      role: 'host',
-    });
+  const handleStart = async () => {
+    await saveSession({ lobbyId, role: 'host' });
+    try {
+      await fetch(`${API_URL}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salon_id: lobbyId,
+          pseudo,
+          role: 'host',
+        }),
+      });
+    } catch (err) {
+      console.warn('Erreur création utilisateur :', err.message);
+    }
+    navigation.navigate('Lobby', { lobbyId, role: 'host' });
   };
 
   const handleBack = () => {
@@ -72,6 +86,10 @@ export default function CreateLobbyController({ navigation }) {
       onBack={handleBack}
       onShare={handleShare}
       onStart={handleStart}
+      pseudo={pseudo}
+      onChangePseudo={setPseudo}
+      avatarIndex={avatarIndex}
+      onSelectAvatar={setAvatarIndex}
     />
   );
 }

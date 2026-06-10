@@ -7,17 +7,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import LobbyView from '../views/LobbyView';
 import { getSocket, joinRoom, disconnectSocket } from '../services/socketService';
+import { clearSession } from '../services/sessionService';
 
 export default function LobbyController({ route, navigation }) {
   const { lobbyId, role } = route.params;
   const socketRef = useRef(null);
 
-  const [isConnected, setIsConnected]   = useState(false);
-  const [queue, setQueue]               = useState([]);
-  const [skipVotes, setSkipVotes]       = useState(0);
-  const [skippedSong, setSkippedSong]   = useState(null);
-  const [userCount, setUserCount]       = useState(1);
+  const [isConnected, setIsConnected] = useState(false);
+  const [queue, setQueue] = useState([]);
+  const [skipVotes, setSkipVotes] = useState(0);
+  const [skippedSong, setSkippedSong] = useState(null);
+  const [userCount, setUserCount] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
+  const [participants, setParticipants] = useState([]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -38,8 +40,10 @@ export default function LobbyController({ route, navigation }) {
       setIsConnected(false);
     });
 
-    socket.on('user-joined', () => {
+    socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
       setUserCount((prev) => prev + 1);
+      setParticipants(prev => [...prev, { id: userId, pseudo, avatarIndex }]);
+
     });
 
     socket.on('countdown-started', ({ currentSong, singerId, songId }) => {
@@ -106,7 +110,22 @@ export default function LobbyController({ route, navigation }) {
     socketRef.current?.emit('start-countdown', { roomCode: lobbyId });
   };
 
-  const handleLeave = () => {
+  const handleDeleteSong = (index) => {
+    socketRef.current?.emit('remove-song', { roomCode: lobbyId, index });
+  };
+
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    socketRef.current?.emit('move-song', { roomCode: lobbyId, from: index, to: index - 1 });
+  };
+
+  const handleMoveDown = (index) => {
+    if (index === queue.length - 1) return;
+    socketRef.current?.emit('move-song', { roomCode: lobbyId, from: index, to: index + 1 });
+  };
+
+  const handleLeave = async () => {
+    await clearSession();
     disconnectSocket();
     navigation.navigate('Home');
   };
