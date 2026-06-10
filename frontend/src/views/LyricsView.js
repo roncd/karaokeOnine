@@ -17,13 +17,13 @@ import {
   ScrollView,
   Modal,
   useWindowDimensions,
-  Image, 
+  Image,
   Animated,
 } from 'react-native';
 
 const YELLOW = '#F5E642';
-const BG     = '#0B3D5E';
-const CARD   = '#0D4D72';
+const BG = '#0B3D5E';
+const CARD = '#0D4D72';
 
 // ─── Bulle de réaction animée ─────────────────────────────────────────────────
 function ReactionBubble({ type }) {
@@ -51,9 +51,7 @@ function QueueItem({ title, isActive }) {
   return (
     <View style={[styles.queueItem, isActive && styles.queueItemActive]}>
       <Text
-        style={[styles.queueItemText, isActive && styles.queueItemTextActive]}
-        numberOfLines={1}
-      >
+        style={[styles.queueItemText, isActive && styles.queueItemTextActive]} numberOfLines={1}>
         {title}
       </Text>
     </View>
@@ -71,6 +69,7 @@ export default function LyricsView({
   role,
   onReaction,
   onOpenQueue,
+  onScrollRef,
 }) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -79,8 +78,8 @@ export default function LyricsView({
   // ─── Panneau file d'attente ────────────────────────────────────────────────
   const QueuePanel = () => (
     <View style={styles.queuePanel}>
-      {queue.map((title, index) => (
-        <QueueItem key={`${title}-${index}`} title={title} isActive={index === 0} />
+      {queue.map((song, index) => (
+        <QueueItem key={`${song.id}-${index}`} title={song-titre} isActive={index === 0} />
       ))}
       <TouchableOpacity style={styles.addQueueBtn} onPress={onOpenQueue}>
         <Text style={styles.addQueueBtnText}>＋</Text>
@@ -96,14 +95,14 @@ export default function LyricsView({
       ) : (
         lyrics.map((line, index) => {
           const isCurrent = index === currentLineIndex;
-          const isPast    = index < currentLineIndex;
+          const isPast = index < currentLineIndex;
           return (
             <Text
               key={index}
               style={[
                 styles.lyricLine,
                 isCurrent && styles.lyricLineCurrent,
-                isPast    && styles.lyricLinePast,
+                isPast && styles.lyricLinePast,
               ]}
             >
               {line.text}
@@ -120,8 +119,8 @@ export default function LyricsView({
 
       {/* Header */}
       <View style={styles.header}>
-        <Image 
-          source={require('../../assets/logo/logo_karaoke.png')} 
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
           style={styles.logo}
         />
 
@@ -148,9 +147,11 @@ export default function LyricsView({
 
         {/* Paroles */}
         <ScrollView
+          scrollEnabled={false}
           style={isDesktop ? styles.lyricsPanelDesktop : styles.lyricsPanelMobile}
           contentContainerStyle={styles.lyricsPanelContent}
           showsVerticalScrollIndicator={false}
+          ref={onScrollRef}
         >
           <LyricsPanel />
         </ScrollView>
@@ -223,9 +224,9 @@ export default function LyricsView({
 
             <FlatList
               data={queue}
-              keyExtractor={(item, i) => `${item}-${i}`}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item, index }) => (
-                <QueueItem title={item} isActive={index === 0} />
+                <QueueItem title={item.titre} isActive={index === 0} />
               )}
             />
 
@@ -265,11 +266,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
- logo: {
-  width: 60,
-  height: 60,
-  resizeMode: 'contain',
-},
+  logo: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
   dotsBtn: { padding: 8 },
   dotsBtnText: { color: '#fff', fontSize: 20, letterSpacing: 2 },
   addBtn: {
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   contentDesktop: { flexDirection: 'row' },
 
   // Paroles
-  lyricsPanelMobile:  { flex: 1 },
+  lyricsPanelMobile: { flex: 1 },
   lyricsPanelDesktop: { flex: 1 },
   lyricsPanelContent: {
     justifyContent: 'center',
