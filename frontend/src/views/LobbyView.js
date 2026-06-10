@@ -38,14 +38,16 @@ function QueueItem({ title, index, isHost }) {
     <View style={styles.queueItem}>
       <View style={styles.queueItemLeft}>
         <Text style={styles.queueIndex}>{index + 1}</Text>
-        <Text style={styles.queueTitle} numberOfLines={1}>{title}</Text>
+        <Text style={styles.queueTitle} numberOfLines={1}>{title.titre}</Text>
       </View>
-      {isHost && (
-        <TouchableOpacity style={styles.queueDots}>
-          <Text style={styles.queueDotsText}>···</Text>
-        </TouchableOpacity>
-      )}
-      {!isHost && <View style={styles.queueCircle} />}
+       <Text style={styles.queueArtiste} numberOfLines={1}>{title.artiste}</Text>
+        {/* <Text style={styles.queueGenre} numberOfLines={1}>{title.genre}</Text> */}
+        <Text style={styles.queueDuree} numberOfLines={1}>{Math.floor((title.duree || 0) / 60)}:{String((title.duree || 0) % 60).padStart(2, '0')}</Text>
+        {isHost && (
+          <TouchableOpacity style={styles.queueDots}>
+            <Text style={styles.queueDotsText}>···</Text>
+          </TouchableOpacity>
+        )}
     </View>
   );
 }
@@ -68,7 +70,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
   const [songInput, setSongInput]       = useState('');
   const [songs, setSongs]               = useState([]);
   const [loading, setLoading]           = useState(false);
-
+  
   const handleSearch = async (text) => {
     if (text.trim().length < 2) { setSongs([]); return; }
     setLoading(true);
@@ -85,6 +87,8 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
     }
   };
 
+  const totalMinutes = queue.reduce((acc, song) => acc + (song.duree || 0), 0);
+  const totalMinutesFormatted = Math.floor(totalMinutes / 60);
   const handleAdd = () => {
     if (!songInput.trim()) return;
     onAddSong(songInput);
@@ -97,13 +101,13 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
       {/* Compteur */}
       <View style={styles.statsRow}>
         <Text style={styles.statsText}>
-          {queue.length} titre{queue.length !== 1 ? 's' : ''}
+          {queue.length} titre{queue.length !== 1 ? 's' : ''} - {totalMinutesFormatted} minutes
         </Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={styles.addBtnText}>＋</Text>
+          <Text style={styles.addBtnText}>+</Text>
         </TouchableOpacity>
       </View>
 
@@ -111,6 +115,8 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
       <View style={styles.queueHeader}>
         <Text style={styles.queueHeaderText}>Titre</Text>
         <Text style={styles.queueHeaderText}>Artiste</Text>
+        {/* <Text style={styles.queueHeaderText}>Genre</Text> */}
+        <Text style={styles.queueHeaderText}>Durée</Text>
       </View>
 
       {/* Liste */}
@@ -176,11 +182,11 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
               {loading ? (
                 <ActivityIndicator color="#F5E642" style={{ marginTop: 24 }} />
               ) : songs.length === 0 ? (
-                //Je pense pas que ce texte est important,on peut le retirer puisqu'il y a les toast
+                // Je pense pas que ce texte est important,on peut le retirer puisqu'il y a les toast
                 <Text style={styles.emptyText}>
                   {songInput.length < 2 ? 'Tapez pour rechercher...' : 'Aucune chanson trouvée'}
                 </Text>
-                //Regler le probleme avec les toast
+                // Regler le probleme avec les toast
               ) : (
                 <FlatList
                   data={songs}
@@ -219,7 +225,7 @@ const API_URL = 'http://localhost:3000/api';
 const GENRES = [
   { label: 'Pop',               emoji: '🎵' },
   { label: 'Rock',              emoji: '🎸' },
-  { label: 'Hip-Hop',           emoji: '🎤' },
+  // { label: 'Hip-Hop',           emoji: '🎤' },
   { label: 'R&B',               emoji: '🎶' },
   { label: 'Soul',              emoji: '🎼' },
   { label: 'Funk',              emoji: '🕺' },
@@ -295,6 +301,9 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
 
   const handleSelectSong = (song) => {
     onAddSong(song.titre);
+    onAddSong(song.artiste);
+    onAddSong(song.genre);
+    onAddSong(song.duree);
     setModalVisible(false);
     setSearching(false);
     setSearchText('');
@@ -312,9 +321,9 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
       {/* Titre catalogue */}
       <View style={styles.catalogueHeader}>
         <Text style={styles.catalogueTitle}>Catalogue</Text>
-        <TouchableOpacity onPress={handleOpenSearch}>
+        {/* <TouchableOpacity onPress={handleOpenSearch}>
           <Text style={styles.searchIcon}>🔍</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Grille genres */}
@@ -566,7 +575,7 @@ const styles = StyleSheet.create({
     backgroundColor: YELLOW,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -684,6 +693,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 1,
+  },
+
+  queueArtiste: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.5,
+    flex: 1,
+  },
+  queueGenre: {
+    color: YELLOW,
+    fontSize: 11,
+    opacity: 0.7,
+    marginHorizontal: 4,
+  },
+  queueDuree: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.5,
+    marginRight: 8,
   },
 
   // Modal
