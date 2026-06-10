@@ -21,48 +21,47 @@ INSERT INTO song (titre, artiste, genre, duree, annee) VALUES
 ALTER TABLE song ADD COLUMN IF NOT EXISTS audio_path VARCHAR(255);
 ALTER TABLE song ADD COLUMN IF NOT EXISTS lyrics_path VARCHAR(255);
 
--- Mettre à jour les chemins pour chaque chanson
 UPDATE song SET 
-  audio_path = 'Ma Direction - Sexion dAssaut Karaoké (2012).mp3',
-  lyrics_path = 'assets/lyrics/Sexion Dassaut - Ma Direction.lrc'
+  audio_path = 'assets/audio/ma_direction_sexion_dassaut_2012.mp3',
+  lyrics_path = 'assets/lyrics/sexion_dassaut_ma_direction.lrc'
 WHERE titre = 'Ma direction';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Cry Me a River - Justin Timberlake _ Karaoke Version _ KaraFun.mp3',
-  lyrics_path = 'assets/lyrics/Justin Timberlake - Cry Me A River.lrc'
+  audio_path = 'assets/audio/cry_me_a_river_justin_timberlake.mp3',
+  lyrics_path = 'assets/lyrics/justin_timberlake_cry_me_a_river.lrc'
 WHERE titre = 'Cry Me A River';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Alicia Keys - Fallin (Karaoke Version).mp3',
-  lyrics_path = 'assets/lyrics/Alicia Keys - Fallin.lrc'
+  audio_path = 'assets/audio/alicia_keys_fallin.mp3',
+  lyrics_path = 'assets/lyrics/alicia_keys_fallin.lrc'
 WHERE titre = 'Fallin''';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Drunk in Love - Beyoncé & Jay-Z _ Karaoke Version _ KaraFun.mp3',
-  lyrics_path = 'assets/lyrics/Beyoncé - Drunk In Love (feat. Jay Z).lrc'
+  audio_path = 'assets/audio/beyonce_jayz_drunk_in_love.mp3',
+  lyrics_path = 'assets/lyrics/beyonce_drunk_in_love.lrc'
 WHERE titre = 'Drunk in Love';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Rihanna - Umbrella - Rihanna & Jay-Z _ Karaoke Version _ KaraFun.mp3',
-  lyrics_path = 'assets/lyrics/Rihanna - Umbrella (feat. Jay-Z).lrc'
+  audio_path = 'assets/audio/rihanna_umbrella.mp3',
+  lyrics_path = 'assets/lyrics/rihanna_umbrella.lrc'
 WHERE titre = 'Umbrella';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Mélodrama - Disiz ft Theodora (Karaoke).mp3',
-  lyrics_path = 'assets/lyrics/disiz & Theodora - melodrama.lrc'
+  audio_path = 'assets/audio/disiz_theodora_melodrama.mp3',
+  lyrics_path = 'assets/lyrics/disiz_theodora_melodrama.lrc'
 WHERE titre = 'Melodrama';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Finesse (Remix) feat. Cardi B - Bruno Mars Karaoke.mp3',
-  lyrics_path = 'assets/lyrics/Bruno Mars - Finesse (Remix) [feat. Cardi B].lrc'
+  audio_path = 'assets/audio/bruno_mars_finesse_remix.mp3',
+  lyrics_path = 'assets/lyrics/bruno_mars_finesse_remix.lrc'
 WHERE titre = 'Finesse';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/karaoké edith piaf la foule.mp3',
-  lyrics_path = 'assets/lyrics/Édith Piaf - La foule (Remasterise en 2015).lrc'
+  audio_path = 'assets/audio/edith_piaf_la_foule.mp3',
+  lyrics_path = 'assets/lyrics/edith_piaf_la_foule.lrc'
 WHERE titre = 'La Foule';
 
 UPDATE song SET 
-  audio_path = 'assets/audio/Remember the Time - Michael Jackson _ Karaoke Version _ KaraFun.mp3',
-  lyrics_path = 'assets/lyrics/Michael Jackson - Remember the Time.lrc'
+  audio_path = 'assets/audio/michael_jackson_remember_the_time.mp3',
+  lyrics_path = 'assets/lyrics/michael_jackson_remember_the_time.lrc'
 WHERE titre = 'Remember the Time';
