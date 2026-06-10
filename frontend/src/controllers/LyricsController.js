@@ -7,8 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Audio } from 'expo-av';
 import LyricsView from '../views/LyricsView';
 import { getSocket, joinRoom } from '../services/socketService';
-
-const API_URL = 'http://localhost:3000/api';
+import { API_URL } from '../config';
 
 // ─── Parser .lrc ─────────────────────────────────────────────────────────────
 function parseLrc(lrcContent) {
