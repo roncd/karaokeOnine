@@ -4,8 +4,8 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import LyricsView from '../views/LyricsView';
+import { Audio } from 'expo-av';
 import { getSocket, joinRoom } from '../services/socketService';
 import { API_URL } from '../config';
 
@@ -21,9 +21,9 @@ function parseLrc(lrcContent) {
     if (!match) continue;
     const minutes = parseInt(match[1]);
     const seconds = parseInt(match[2]);
-    const ms      = parseInt(match[3].padEnd(3, '0'));
-    const timeMs  = (minutes * 60 + seconds) * 1000 + ms;
-    const text    = line.replace(timeRegex, '').trim();
+    const ms = parseInt(match[3].padEnd(3, '0'));
+    const timeMs = (minutes * 60 + seconds) * 1000 + ms;
+    const text = line.replace(timeRegex, '').trim();
     if (text) result.push({ timeMs, text });
   }
 
@@ -33,30 +33,69 @@ function parseLrc(lrcContent) {
 export default function LyricsController({ route, navigation }) {
   const { lobbyId, role, currentSong, singerId, songId } = route.params;
 
-  const socketRef    = useRef(null);
-  const intervalRef  = useRef(null);
+  const socketRef = useRef(null);
+  const intervalRef = useRef(null);
   const hasNavigated = useRef(false);
 
-  const [lyrics, setLyrics]                     = useState([]);
+  const [lyrics, setLyrics] = useState([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [reactions, setReactions]               = useState([]);
-  const [queue, setQueue]                       = useState([]);
-  const [participants, setParticipants]         = useState([]);
-  const [audioUri, setAudioUri]                 = useState(null);
+  const [reactions, setReactions] = useState([]);
+  const [queue, setQueue] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [audioUri, setAudioUri] = useState(null);
+  const [scrollRef, setScrollRef] = useState(null);
 
   // ─── Lecteur audio ────────────────────────────────────────────────────────
-  const player = useAudioPlayer(audioUri ? { uri: audioUri, autoplay: true } : null);
-  const status = useAudioPlayerStatus(player);
+  const soundRef = useRef(null);
+  const lyricsRef = useRef([]);
 
   // ─── Charger paroles + audio ──────────────────────────────────────────────
   useEffect(() => {
     const loadSong = async () => {
       try {
-        const lyricsRes  = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
+        const lyricsRes = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
         const lyricsData = await lyricsRes.json();
-        const parsed     = parseLrc(lyricsData.lyrics);
+        const parsed = parseLrc(lyricsData.lyrics);
         setLyrics(parsed);
+        lyricsRef.current = parsed;
+
+        // Sync paroles avec position audio
+        intervalRef.current = setInterval(async () => {
+          const status = await soundRef.current?.getStatusAsync();
+          if (!status?.isLoaded) return;
+
+          const positionMs = status.positionMillis;
+          const arr = lyricsRef.current;
+
+          let idx = 0;
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i].timeMs <= positionMs) idx = i;
+            else break;
+          }
+          setCurrentLineIndex(idx);
+        }, 200);
+
         setAudioUri(`${API_URL}/api/songs/${songId}/audio`);
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: `${API_URL}/api/songs/${songId}/audio` },
+          { shouldPlay: true }
+        );
+        soundRef.current = sound;
+
+        // Détecter la fin de la chanson
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.didJustFinish && !hasNavigated.current) {
+            hasNavigated.current = true;
+            clearInterval(intervalRef.current);
+            navigation.replace('VoteStar', { lobbyId, role, hostId: singerId });
+          }
+        });
+
+        // Cleanup
+        return () => {
+          clearInterval(intervalRef.current);
+          soundRef.current?.unloadAsync();
+        };
       } catch (err) {
         console.warn('Erreur chargement chanson :', err.message);
       }
@@ -67,23 +106,6 @@ export default function LyricsController({ route, navigation }) {
     return () => clearInterval(intervalRef.current);
   }, [songId]);
 
-  // ─── Sync paroles avec position audio ────────────────────────────────────
-  useEffect(() => {
-    if (!status?.isLoaded || lyrics.length === 0) return;
-
-    intervalRef.current = setInterval(() => {
-      const positionMs = (status.currentTime ?? 0) * 1000;
-      let idx = 0;
-      for (let i = 0; i < lyrics.length; i++) {
-        if (lyrics[i].timeMs <= positionMs) idx = i;
-        else break;
-      }
-      setCurrentLineIndex(idx);
-    }, 200);
-
-    return () => clearInterval(intervalRef.current);
-  }, [status?.isLoaded, lyrics]);
-
   // ─── Fin de la chanson ────────────────────────────────────────────────────
   useEffect(() => {
     if (status?.didJustFinish && !hasNavigated.current) {
@@ -92,6 +114,20 @@ export default function LyricsController({ route, navigation }) {
       navigation.replace('VoteStar', { lobbyId, role, hostId: singerId });
     }
   }, [status?.didJustFinish]);
+
+  // Scroll automatique
+  useEffect(() => {
+    if (scrollRef && currentLineIndex > 2) {
+      scrollRef.scrollTo({
+        y: currentLineIndex * 40,  // 40px par ligne approximativement
+        animated: true
+      });
+    }
+  }, [currentLineIndex]);
+
+  useEffect(() => {
+    lyricsRef.current = lyrics;
+  }, [lyrics]);
 
   // ─── Socket ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -143,6 +179,8 @@ export default function LyricsController({ route, navigation }) {
       role={role}
       onReaction={handleReaction}
       onOpenQueue={handleOpenQueue}
+      onScrollRef={setScrollRef}
+
     />
   );
 }

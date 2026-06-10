@@ -29,7 +29,7 @@ function registerReadyHandlers(io, socket) {
     // Notifier tout le monde que le compte à rebours commence
     io.to(roomCode).emit('countdown-started', {
       duration: COUNTDOWN_SECONDS,
-      currentSong,
+      currentSong: currentSong.titre,
       songId,
       singerId,
     });
