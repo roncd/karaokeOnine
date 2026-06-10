@@ -7,8 +7,8 @@ function registerQueueHandlers(io, socket) {
     const { roomCode, songTitle } = data;
 
     // Chercher la chanson en BDD
-    const result = await pool.query(
-      `SELECT id, titre FROM song WHERE titre ILIKE $1 LIMIT 1`,
+      const result = await pool.query(
+      `SELECT id, titre, artiste, genre, duree FROM song WHERE titre ILIKE $1 LIMIT 1`,
       [songTitle]
     );
 
@@ -23,7 +23,13 @@ function registerQueueHandlers(io, socket) {
     if (!roomSongIds[roomCode]) roomSongIds[roomCode] = [];
     if (!roomSingers[roomCode]) roomSingers[roomCode] = [];
 
-    roomQueues[roomCode].push(song.titre);
+    roomQueues[roomCode].push({
+      id: song.id,
+      titre: song.titre,
+      artiste: song.artiste,
+      genre: song.genre,
+      duree: song.duree,
+    });
     roomSongIds[roomCode].push(song.id);
     roomSingers[roomCode].push(socket.id);
 

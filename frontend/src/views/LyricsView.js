@@ -174,7 +174,7 @@ export default function LyricsView({
               style={styles.reactionBtn}
               onPress={() => onReaction(type)}
             >
-              // on peut changer les emojis si besoin, pour qu'ils ressemblent au figma
+              {/* on peut changer les emojis si besoin, pour qu'ils ressemblent au figma */}
               <Text style={styles.reactionBtnText}>
                 {type === 'heart' ? '❤️' : type === 'fire' ? '🎉' : '👍'}
               </Text>
