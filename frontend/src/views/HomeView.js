@@ -6,176 +6,236 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  Image, 
+  Image,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
+import GlowStar from '../components/GlowStar';
+
+const NAVY = '#1A3651';
+const YELLOW = '#FEF058';
+
+function Sparkle({ style, size = 18 }) {
+  return (
+    <Text style={[styles.sparkle, style, { fontSize: size }]}>+</Text>
+  );
+}
 
 export default function HomeView({ onCreateLobby, onJoinLobby }) {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 640;
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
 
-      {/* Logo */}
-      <Image 
-        source={require('../../assets/logo/logo_karaoke.png')} 
-        style={styles.logo}
-      />
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
+          style={styles.logo}
+        />
+      </View>
 
       <View style={styles.container}>
+        <GlowStar size={240} style={styles.starTopLeft} opacity={0.9} />
+        <GlowStar size={170} style={styles.starLeftMid} opacity={0.75} />
+        <GlowStar size={150} style={styles.starRightMid} opacity={0.8} />
+        <GlowStar size={210} style={styles.starBottomLeft} opacity={0.85} />
+        <GlowStar size={190} style={styles.starBottomCenter} opacity={0.65} />
 
-        {/* Décorations */}
-        <Text style={styles.decoNoteTop}>♪</Text>
-        <Text style={styles.decoPlus1}>+</Text>
-        <Text style={styles.decoPlus2}>+</Text>
-        <View style={styles.decoBlob1} />
-        <View style={styles.decoBlob2} />
-        <Text style={styles.decoNoteBottom}>♫</Text>
+        <Sparkle style={styles.sparkle1} />
+        <Sparkle style={styles.sparkle2} size={16} />
+        <Sparkle style={styles.sparkle3} size={14} />
+        <Sparkle style={styles.sparkle4} size={20} />
 
-        {/* Titre */}
-        <View style={styles.titleBlock}>
-          <Text style={styles.title}>KARAOKE O'NINE</Text>
+        <Text style={styles.noteSingle}>♪</Text>
+        <Text style={styles.noteBeamed}>♫</Text>
+
+        <View style={styles.hero}>
+          <Text style={[styles.title, isCompact && styles.titleCompact]}>
+            KARAOKE O'NINE
+          </Text>
           <Text style={styles.subtitle}>Ici, tout le monde est une star</Text>
-        </View>
 
-        {/* Boutons */}
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={onCreateLobby}
-            activeOpacity={0.8}
+          <View
+            style={[
+              styles.buttonGroup,
+              isCompact && styles.buttonGroupCompact,
+            ]}
           >
-            <Text style={styles.buttonText}>Créer un salon</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, isCompact && styles.buttonCompact]}
+              onPress={onCreateLobby}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.buttonText}>Créer un salon</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={onJoinLobby}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Rejoindre un salon</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, isCompact && styles.buttonCompact]}
+              onPress={onJoinLobby}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.buttonText}>Rejoindre un salon</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
       </View>
     </SafeAreaView>
   );
 }
 
-const YELLOW = '#F5E642';
-const BG     = '#0B3D5E';
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: BG,
+    backgroundColor: NAVY,
+  },
+  header: {
+    paddingHorizontal: 28,
+    paddingTop: Platform.OS === 'web' ? 24 : 8,
+    paddingBottom: 8,
   },
   logo: {
-  width: 60,
-  height: 60,
-  resizeMode: 'contain',
-},
+    width: 72,
+    height: 72,
+    resizeMode: 'contain',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 32,
-    paddingBottom: 60,
-    paddingTop: 20,
-  },
-
-  // Décorations
-  decoNoteTop: {
-    position: 'absolute',
-    top: 30,
-    right: 40,
-    fontSize: 40,
-    color: YELLOW,
-    opacity: 0.9,
-  },
-  decoPlus1: {
-    position: 'absolute',
-    top: 60,
-    left: 50,
-    fontSize: 22,
-    color: YELLOW,
-    opacity: 0.7,
-  },
-  decoPlus2: {
-    position: 'absolute',
-    top: 200,
-    left: 30,
-    fontSize: 18,
-    color: YELLOW,
-    opacity: 0.5,
-  },
-  decoBlob1: {
-    position: 'absolute',
-    bottom: 180,
-    left: 20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#3A7D44',
-    opacity: 0.35,
-  },
-  decoBlob2: {
-    position: 'absolute',
-    bottom: 240,
-    left: 10,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#3A7D44',
-    opacity: 0.2,
-  },
-  decoNoteBottom: {
-    position: 'absolute',
-    bottom: 120,
-    right: 30,
-    fontSize: 52,
-    color: YELLOW,
-    opacity: 0.95,
-  },
-
-  // Titre
-  titleBlock: {
-    flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+    overflow: 'hidden',
+  },
+  hero: {
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 760,
+    zIndex: 2,
   },
   title: {
-    fontSize: 32,
+    fontSize: 48,
     fontWeight: '900',
-    letterSpacing: 4,
+    letterSpacing: 1,
     color: YELLOW,
     textAlign: 'center',
+    ...Platform.select({
+      web: {
+        fontFamily: '"Fredoka", "Nunito", "Varela Round", sans-serif',
+        lineHeight: 58,
+      },
+      default: {},
+    }),
+  },
+  titleCompact: {
+    fontSize: 34,
+    letterSpacing: 0.5,
+    lineHeight: 42,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.7,
+    marginTop: 12,
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.88,
     textAlign: 'center',
-    marginTop: 4,
+    ...Platform.select({
+      web: { fontFamily: '"Inter", "Helvetica Neue", sans-serif' },
+      default: {},
+    }),
   },
-
-  // Boutons
   buttonGroup: {
+    marginTop: 36,
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 18,
+  },
+  buttonGroupCompact: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: 14,
   },
   button: {
+    flex: 1,
+    minWidth: 180,
+    maxWidth: 280,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 8,
-  },
-  buttonPrimary: {
+    paddingVertical: 16,
+    paddingHorizontal: 22,
+    borderRadius: 999,
     backgroundColor: YELLOW,
   },
+  buttonCompact: {
+    maxWidth: '100%',
+  },
   buttonText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
-    letterSpacing: 1,
-    color: '#0D0D0D',
+    color: NAVY,
+    textAlign: 'center',
+    ...Platform.select({
+      web: { fontFamily: '"Inter", "Helvetica Neue", sans-serif' },
+      default: {},
+    }),
+  },
+  starTopLeft: {
+    position: 'absolute',
+    top: '6%',
+    left: '-4%',
+    zIndex: 0,
+  },
+  starLeftMid: {
+    position: 'absolute',
+    top: '52%',
+    left: '-6%',
+    zIndex: 0,
+  },
+  starRightMid: {
+    position: 'absolute',
+    top: '28%',
+    right: '-5%',
+    zIndex: 0,
+  },
+  starBottomLeft: {
+    position: 'absolute',
+    bottom: '6%',
+    left: '4%',
+    zIndex: 0,
+  },
+  starBottomCenter: {
+    position: 'absolute',
+    bottom: '-8%',
+    left: '42%',
+    zIndex: 0,
+  },
+  sparkle: {
+    position: 'absolute',
+    color: YELLOW,
+    opacity: 0.75,
+    fontWeight: '300',
+    zIndex: 1,
+  },
+  sparkle1: { top: '12%', left: '22%' },
+  sparkle2: { top: '28%', right: '18%' },
+  sparkle3: { bottom: '34%', left: '28%' },
+  sparkle4: { top: '52%', left: '12%' },
+  noteSingle: {
+    position: 'absolute',
+    bottom: '18%',
+    right: '12%',
+    fontSize: 42,
+    color: YELLOW,
+    zIndex: 1,
+  },
+  noteBeamed: {
+    position: 'absolute',
+    bottom: '12%',
+    right: '6%',
+    fontSize: 56,
+    color: YELLOW,
+    zIndex: 1,
   },
 });
