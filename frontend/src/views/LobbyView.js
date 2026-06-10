@@ -4,6 +4,7 @@
  * Host  : voit la file d'attente complète avec gestion
  * Guest : voit le catalogue et peut proposer une chanson
  */
+import { API_URL } from '../config'
 import Toast from '../components/Toast';
 import React, { useState } from 'react';
 import {
@@ -76,7 +77,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/api/songs/search?titre=${encodeURIComponent(text)}`
+        `${API_URL}/api/songs/search?titre=${encodeURIComponent(text)}`
       );
       const data = await res.json();
       setSongs(Array.isArray(data) ? data : []);
@@ -220,8 +221,6 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 }
 
 // ─── Vue PARTICIPANT : catalogue ─────────────────────────────────────────────
-const API_URL = 'http://localhost:3000/api';
-
 const GENRES = [
   { label: 'Pop',               emoji: '🎵' },
   { label: 'Rock',              emoji: '🎸' },
@@ -250,7 +249,7 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
     setModalVisible(true);
     try {
       const res = await fetch(
-        `${API_URL}/songs/search?genre=${encodeURIComponent(genre)}`
+        `${API_URL}/api/songs/search?genre=${encodeURIComponent(genre)}`
       );
       const data = await res.json();
       setSongs(Array.isArray(data) ? data : []);
@@ -270,7 +269,7 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/api/songs/search?titre=${encodeURIComponent(text)}`
+        `${API_URL}/api/songs/search?titre=${encodeURIComponent(text)}`
       );
       const data = await res.json();
       setSongs(Array.isArray(data) ? data : []);
@@ -289,7 +288,7 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
     setModalVisible(true);
     setSearching(true);
     try {
-      const res = await fetch(`${API_URL}/songs`);
+      const res = await fetch(`${API_URL}/api/songs`);
       const data = await res.json();
       setSongs(Array.isArray(data) ? data : []);
     } catch (err) {
