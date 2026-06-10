@@ -13,7 +13,7 @@ import JoinLobbyController   from '../controllers/JoinLobbyController';
 import LobbyController    from '../controllers/LobbyController'; // TODO
 import ReadyController from '../controllers/ReadyController';
 import LyricsController from '../controllers/LyricsController';
-import VoteStarController from '../controllers/voteStarController'
+import VoteStarController from '../controllers/VoteStarController';
 
 const Stack = createNativeStackNavigator();
 
