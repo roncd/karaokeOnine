@@ -8,7 +8,7 @@ let currentRoom = null;
 
 export const getSocket = () => {
   if (!socket) {
-    socket = io(SOCKET_URL, { 
+    socket = io(SOCKET_URL, {
       transports: ['websocket'],
       reconnection: true,
     });
@@ -16,15 +16,15 @@ export const getSocket = () => {
   return socket;
 };
 
-export const joinRoom = (roomCode) => {
+export const joinRoom = (roomCode, pseudo, avatarIndex) => {
   if (currentRoom === roomCode) return;
   currentRoom = roomCode;
   const s = getSocket();
   if (s.connected) {
-    s.emit('join-room', roomCode);
+    s.emit('join-room', { roomCode, pseudo, avatarIndex });
   } else {
     s.once('connect', () => {
-      s.emit('join-room', roomCode);
+      s.emit('join-room', { roomCode, pseudo, avatarIndex });
     });
   }
 };

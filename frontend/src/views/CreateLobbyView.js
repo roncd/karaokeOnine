@@ -5,19 +5,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Image, 
+  Image,
   ActivityIndicator,
+  TextInput
 } from 'react-native';
+import AvatarPicker from '../components/AvatarPicker';
 
-export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart }) {
+export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pseudo, onChangePseudo, avatarIndex, onSelectAvatar }) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
 
         {/* Logo */}
-        <Image 
-         source={require('../../assets/logo/logo_karaoke.png')} 
-        style={styles.logo}
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
+          style={styles.logo}
         />
 
         {/* Titre */}
@@ -39,6 +41,27 @@ export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart }) {
             <ActivityIndicator color="#F5E642" size="large" />
           )}
         </View>
+
+        {/* Pseudo */}
+        <View style={styles.titleBlock}>
+          <Text style={{ color: '#fff', opacity: 0.7 }}>Votre pseudo</Text>
+        </View>
+
+        <View style={styles.idBlock}>
+          <TextInput
+            style={styles.pseudoInput}
+            value={pseudo}
+            onChangeText={onChangePseudo}
+            placeholder="Entrez votre pseudo"
+            placeholderTextColor="rgba(255,255,255,0.3)"
+          />
+        </View>
+
+        {/* Avatar */}
+        <View style={styles.titleBlock}>
+          <Text style={{ color: '#fff', opacity: 0.7 }}>Votre avatar</Text>
+        </View>
+        <AvatarPicker selected={avatarIndex} onSelect={onSelectAvatar} />
 
         {/* Boutons */}
         <View style={styles.actions}>
@@ -67,8 +90,8 @@ export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart }) {
 }
 
 const YELLOW = '#F5E642';
-const BG     = '#0B3D5E';
-const CARD   = '#0D4D72';
+const BG = '#0B3D5E';
+const CARD = '#0D4D72';
 
 const styles = StyleSheet.create({
   safe: {
@@ -78,17 +101,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 32,
+    paddingVertical: 16,
+    gap: 15,
   },
 
   // Logo
   logo: {
-  width: 60,
-  height: 60,
-  resizeMode: 'contain',
-},
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
 
   // Titre
   titleBlock: {
@@ -109,9 +131,8 @@ const styles = StyleSheet.create({
 
   // Code
   idBlock: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: 12,
   },
   codeRow: {
     flexDirection: 'row',
@@ -119,7 +140,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: YELLOW,
     borderRadius: 8,
-    paddingVertical: 18,
+    paddingVertical: 10,
+    marginTop: 10,
     paddingHorizontal: 24,
     gap: 16,
     backgroundColor: CARD,
@@ -128,7 +150,7 @@ const styles = StyleSheet.create({
   },
   codeText: {
     color: YELLOW,
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
     letterSpacing: 10,
   },
@@ -138,6 +160,19 @@ const styles = StyleSheet.create({
   copyIcon: {
     color: YELLOW,
     fontSize: 22,
+  },
+
+  // Pseudo avatar
+  pseudoInput: {
+    borderWidth: 1,
+    borderColor: 'rgba(245,230,66,0.4)',
+    borderRadius: 8,
+    color: '#fff',
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 12,
   },
 
   // Boutons

@@ -9,20 +9,22 @@ import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
 import { API_URL } from '../config'
+import { saveSession } from '../services/sessionService';
 
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
   const socketRef = useRef(null);
-
+  const [pseudo, setPseudo] = useState('');
+  const [avatarIndex, setAvatarIndex] = useState(0);
   useEffect(() => {
-   const createLobby = async () => {
-    const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
-    const { code } = await response.json();
-    setLobbyId(code);
-  };
+    const createLobby = async () => {
+      const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
+      const { code } = await response.json();
+      setLobbyId(code);
+    };
 
-  createLobby();
-  
+    createLobby();
+
     // Connexion socket
     socketRef.current = io(API_URL, {
       transports: ['websocket'],
@@ -31,7 +33,7 @@ export default function CreateLobbyController({ navigation }) {
     socketRef.current.on('connect', () => {
       console.log('Socket connecté (hôte) :', socketRef.current.id);
       // Rejoindre la room en tant qu'hôte
-      socketRef.current.emit('join-room', code);
+      socketRef.current.emit('join-room', { roomCode: lobbyId, pseudo, avatarIndex });
     });
 
     socketRef.current.on('connect_error', (err) => {
@@ -53,13 +55,19 @@ export default function CreateLobbyController({ navigation }) {
     }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     // Naviguer vers le lobby en tant qu'hôte
-    navigation.navigate('Lobby', {
-      lobbyId,
-      role: 'host',
-      socket: null, // on passe pas le socket en param, on le recrée dans LobbyController
+    await saveSession({ lobbyId, role: 'host' });
+    await fetch(`${API_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        salon_id: lobbyId,
+        pseudo,
+        role: 'host'
+      })
     });
+    navigation.navigate('Lobby', { lobbyId, role: 'host' });
   };
 
   const handleBack = () => {
@@ -73,6 +81,10 @@ export default function CreateLobbyController({ navigation }) {
       onBack={handleBack}
       onShare={handleShare}
       onStart={handleStart}
+      pseudo={pseudo}
+      onChangePseudo={setPseudo}
+      avatarIndex={avatarIndex}
+      onSelectAvatar={setAvatarIndex}
     />
   );
 }
