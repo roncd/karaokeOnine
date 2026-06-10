@@ -77,10 +77,10 @@ export default function LyricsView({
 
   // ─── Panneau file d'attente ────────────────────────────────────────────────
   const QueuePanel = () => (
-    <View style={styles.queuePanel}>
-      {queue.map((song, index) => (
-        <QueueItem key={`${song.id}-${index}`} title={song-titre} isActive={index === 0} />
-      ))}
+  <View style={styles.queuePanel}>
+    {queue.map((title, index) => (
+      <QueueItem key={`${title?.titre || title}-${index}`} title={title?.titre || title} isActive={index === 0} />
+    ))}
       <TouchableOpacity style={styles.addQueueBtn} onPress={onOpenQueue}>
         <Text style={styles.addQueueBtnText}>＋</Text>
       </TouchableOpacity>
@@ -224,9 +224,9 @@ export default function LyricsView({
 
             <FlatList
               data={queue}
-              keyExtractor={(item) => item.id.toString()}
+             keyExtractor={(item, i) => `${item.titre || item}-${i}`}
               renderItem={({ item, index }) => (
-                <QueueItem title={item.titre} isActive={index === 0} />
+                <QueueItem title={item.titre || item} isActive={index === 0} />
               )}
             />
 

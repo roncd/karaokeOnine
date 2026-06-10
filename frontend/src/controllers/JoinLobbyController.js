@@ -1,15 +1,11 @@
 /**
  * JoinLobbyController.js
- * Valide le code saisi, connecte le socket en tant que participant, navigue vers Lobby
  */
 
 import React, { useState, useRef } from 'react';
-import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import JoinLobbyView from '../views/JoinLobbyView';
-import { API_URL } from '../config';
-
-const SOCKET_URL = API_URL;; // Android emulator: 10.0.2.2 | vrai device: IP locale
+import { getSocket, joinRoom } from '../services/socketService';
 
 export default function JoinLobbyController({ navigation }) {
   const [inputId, setInputId] = useState('');
@@ -33,33 +29,26 @@ export default function JoinLobbyController({ navigation }) {
     const roomCode = LobbyModel.normaliseId(inputId);
     setLoading(true);
 
-    // Connexion socket
-    socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket'],
-    });
+    const socket = getSocket();
+    socketRef.current = socket;
 
-    socketRef.current.on('connect', () => {
-      console.log('Socket connecté (participant) :', socketRef.current.id);
-      socketRef.current.emit('join-room', roomCode);
-    });
+    joinRoom(roomCode);
 
-    // Confirmation que quelqu'un a rejoint (dont nous-mêmes)
-    socketRef.current.on('user-joined', ({ userId }) => {
+    socket.once('user-joined', ({ userId }) => {
       console.log('user-joined reçu :', userId);
       setLoading(false);
-      // Naviguer vers le lobby en tant que participant
       navigation.navigate('Lobby', {
         lobbyId: roomCode,
         role: 'guest',
       });
     });
 
-    socketRef.current.on('room-full', () => {
+    socket.on('room-full', () => {
       setError('full');
       setLoading(false);
-  });
+    });
 
-    socketRef.current.on('connect_error', (err) => {
+    socket.on('connect_error', (err) => {
       console.warn('Erreur connexion socket :', err.message);
       setError('Impossible de se connecter au serveur.');
       setLoading(false);
@@ -67,7 +56,6 @@ export default function JoinLobbyController({ navigation }) {
   };
 
   const handleBack = () => {
-    socketRef.current?.disconnect();
     navigation.goBack();
   };
 

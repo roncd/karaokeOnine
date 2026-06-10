@@ -4,11 +4,11 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import LyricsView from '../views/LyricsView';
 import { Audio } from 'expo-av';
+import LyricsView from '../views/LyricsView';
 import { getSocket, joinRoom } from '../services/socketService';
-import { API_URL } from '../config';
 
+const API_URL = 'http://localhost:3000/api';
 
 // ─── Parser .lrc ─────────────────────────────────────────────────────────────
 function parseLrc(lrcContent) {
@@ -21,9 +21,9 @@ function parseLrc(lrcContent) {
     if (!match) continue;
     const minutes = parseInt(match[1]);
     const seconds = parseInt(match[2]);
-    const ms = parseInt(match[3].padEnd(3, '0'));
-    const timeMs = (minutes * 60 + seconds) * 1000 + ms;
-    const text = line.replace(timeRegex, '').trim();
+    const ms      = parseInt(match[3].padEnd(3, '0'));
+    const timeMs  = (minutes * 60 + seconds) * 1000 + ms;
+    const text    = line.replace(timeRegex, '').trim();
     if (text) result.push({ timeMs, text });
   }
 
@@ -33,36 +33,43 @@ function parseLrc(lrcContent) {
 export default function LyricsController({ route, navigation }) {
   const { lobbyId, role, currentSong, singerId, songId } = route.params;
 
-  const socketRef = useRef(null);
-  const intervalRef = useRef(null);
+  const socketRef    = useRef(null);
+  const soundRef     = useRef(null);
+  const intervalRef  = useRef(null);
   const hasNavigated = useRef(false);
+  const lyricsRef    = useRef([]);
 
-  const [lyrics, setLyrics] = useState([]);
+  const [lyrics, setLyrics]                     = useState([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [reactions, setReactions] = useState([]);
-  const [queue, setQueue] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [audioUri, setAudioUri] = useState(null);
-  const [scrollRef, setScrollRef] = useState(null);
-
-  // ─── Lecteur audio ────────────────────────────────────────────────────────
-  const soundRef = useRef(null);
-  const lyricsRef = useRef([]);
+  const [reactions, setReactions]               = useState([]);
+  const [queue, setQueue]                       = useState([]);
+  const [participants, setParticipants]         = useState([]);
+  const [scrollRef, setScrollRef]               = useState(null);
 
   // ─── Charger paroles + audio ──────────────────────────────────────────────
   useEffect(() => {
     const loadSong = async () => {
       try {
-        const lyricsRes = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
+        // Charger les paroles
+        const lyricsRes  = await fetch(`${API_URL}/songs/${songId}/lyrics`);
         const lyricsData = await lyricsRes.json();
-        const parsed = parseLrc(lyricsData.lyrics);
+        const parsed     = parseLrc(lyricsData.lyrics);
         setLyrics(parsed);
         lyricsRef.current = parsed;
 
-        // Sync paroles avec position audio
+        // Charger l'audio
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        const { sound } = await Audio.loadAsync(
+          { uri: `${API_URL}/songs/${songId}/audio` },
+          { shouldPlay: true }
+        );
+        soundRef.current = sound;
+
+        // Sync paroles avec la position audio
         intervalRef.current = setInterval(async () => {
-          const status = await soundRef.current?.getStatusAsync();
-          if (!status?.isLoaded) return;
+          if (!soundRef.current) return;
+          const status = await soundRef.current.getStatusAsync();
+          if (!status.isLoaded) return;
 
           const positionMs = status.positionMillis;
           const arr = lyricsRef.current;
@@ -73,29 +80,15 @@ export default function LyricsController({ route, navigation }) {
             else break;
           }
           setCurrentLineIndex(idx);
-        }, 200);
 
-        setAudioUri(`${API_URL}/api/songs/${songId}/audio`);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: `${API_URL}/api/songs/${songId}/audio` },
-          { shouldPlay: true }
-        );
-        soundRef.current = sound;
-
-        // Détecter la fin de la chanson
-        sound.setOnPlaybackStatusUpdate((status) => {
+          // Fin de la chanson
           if (status.didJustFinish && !hasNavigated.current) {
             hasNavigated.current = true;
             clearInterval(intervalRef.current);
             navigation.replace('VoteStar', { lobbyId, role, hostId: singerId });
           }
-        });
+        }, 200);
 
-        // Cleanup
-        return () => {
-          clearInterval(intervalRef.current);
-          soundRef.current?.unloadAsync();
-        };
       } catch (err) {
         console.warn('Erreur chargement chanson :', err.message);
       }
@@ -103,31 +96,26 @@ export default function LyricsController({ route, navigation }) {
 
     if (songId) loadSong();
 
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      clearInterval(intervalRef.current);
+      soundRef.current?.unloadAsync();
+    };
   }, [songId]);
 
-  // ─── Fin de la chanson ────────────────────────────────────────────────────
-  useEffect(() => {
-    if (status?.didJustFinish && !hasNavigated.current) {
-      hasNavigated.current = true;
-      clearInterval(intervalRef.current);
-      navigation.replace('VoteStar', { lobbyId, role, hostId: singerId });
-    }
-  }, [status?.didJustFinish]);
-
-  // Scroll automatique
-  useEffect(() => {
-    if (scrollRef && currentLineIndex > 2) {
-      scrollRef.scrollTo({
-        y: currentLineIndex * 40,  // 40px par ligne approximativement
-        animated: true
-      });
-    }
-  }, [currentLineIndex]);
-
+  // Sync lyricsRef avec lyrics
   useEffect(() => {
     lyricsRef.current = lyrics;
   }, [lyrics]);
+
+  // Scroll automatique vers la ligne courante
+  useEffect(() => {
+    if (scrollRef && currentLineIndex > 2) {
+      scrollRef.scrollTo({
+        y: currentLineIndex * 40,
+        animated: true,
+      });
+    }
+  }, [currentLineIndex]);
 
   // ─── Socket ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -180,7 +168,6 @@ export default function LyricsController({ route, navigation }) {
       onReaction={handleReaction}
       onOpenQueue={handleOpenQueue}
       onScrollRef={setScrollRef}
-
     />
   );
 }

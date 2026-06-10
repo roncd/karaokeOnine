@@ -1,45 +1,46 @@
 /**
  * CreateLobbyController.js
- * Generates a lobby ID on mount, connects socket as host, and navigates to Lobby
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Share } from 'react-native';
-import { io } from 'socket.io-client';
 import { LobbyModel } from '../models/LobbyModel';
 import CreateLobbyView from '../views/CreateLobbyView';
-import { API_URL } from '../config'
+import { API_URL } from '../config';
+import { getSocket, joinRoom, disconnectSocket } from '../services/socketService';
 
 export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
-  const socketRef = useRef(null);
+  const lobbyIdRef = useRef('');
+  const socketRef  = useRef(null);
 
   useEffect(() => {
-   const createLobby = async () => {
-    const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
-    const { code } = await response.json();
-    setLobbyId(code);
-  };
+    const socket = getSocket();
+    socketRef.current = socket;
 
-  createLobby();
-  
-    // Connexion socket
-    socketRef.current = io(API_URL, {
-      transports: ['websocket'],
-    });
+    const createLobby = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
+        const { code } = await response.json();
+        setLobbyId(code);
+        lobbyIdRef.current = code;
+        joinRoom(code);
+      } catch (err) {
+        const generated = LobbyModel.generateId();
+        setLobbyId(generated);
+        lobbyIdRef.current = generated;
+        joinRoom(generated);
+      }
+    };
 
-    socketRef.current.on('connect', () => {
-      console.log('Socket connecté (hôte) :', socketRef.current.id);
-      // Rejoindre la room en tant qu'hôte
-      socketRef.current.emit('join-room', code);
-    });
+    createLobby();
 
-    socketRef.current.on('connect_error', (err) => {
+    socket.on('connect_error', (err) => {
       console.warn('Erreur connexion socket :', err.message);
     });
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.off('connect_error');
     };
   }, []);
 
@@ -54,16 +55,14 @@ export default function CreateLobbyController({ navigation }) {
   };
 
   const handleStart = () => {
-    // Naviguer vers le lobby en tant qu'hôte
     navigation.navigate('Lobby', {
       lobbyId,
       role: 'host',
-      socket: null, // on passe pas le socket en param, on le recrée dans LobbyController
     });
   };
 
   const handleBack = () => {
-    socketRef.current?.disconnect();
+    disconnectSocket();
     navigation.goBack();
   };
 
