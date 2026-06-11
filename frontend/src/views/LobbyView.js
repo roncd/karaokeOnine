@@ -35,25 +35,6 @@ function StarLogo({ isHost }) {
 }
 
 // ─── Item de la file d'attente ───────────────────────────────────────────────
-function QueueItem({ title, index, isHost }) {
-  return (
-    <View style={styles.queueItem}>
-      <View style={styles.queueItemLeft}>
-        <Text style={styles.queueIndex}>{index + 1}</Text>
-        <Text style={styles.queueTitle} numberOfLines={1}>{title.titre}</Text>
-      </View>
-       <Text style={styles.queueArtiste} numberOfLines={1}>{title.artiste}</Text>
-        {/* <Text style={styles.queueGenre} numberOfLines={1}>{title.genre}</Text> */}
-        <Text style={styles.queueDuree} numberOfLines={1}>{Math.floor((title.duree || 0) / 60)}:{String((title.duree || 0) % 60).padStart(2, '0')}</Text>
-        {isHost && (
-          <TouchableOpacity style={styles.queueDots}>
-            <Text style={styles.queueDotsText}>···</Text>
-          </TouchableOpacity>
-        )}
-    </View>
-  );
-}
-
 function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -66,13 +47,39 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
     require('../../assets/avatars/avatar6.png'),
     require('../../assets/avatars/avatar7.png'),
     require('../../assets/avatars/avatar8.png'),
-
   ];
 
   return (
-    <View style={styles.queueRow}>
-      {/* Avatar avec tooltip */}
+    <View style={styles.queueItemRow}>
+
+      {/* BLOC DU MORCEAU */}
+      <View style={styles.queueRow}>
+        <Text style={[styles.queueTitle, styles.colTitle]}>{item.titre}</Text>
+        <Text style={[styles.queueArtiste, styles.colArtist]}>{item.artiste}</Text>
+        <Text style={[styles.queueGenre, styles.colGenre]}>{item.genre}</Text>
+        <Text style={[styles.queueDuree, styles.colDuration]}>
+          {Math.floor((item.duree || 0) / 60)}:
+          {String((item.duree || 0) % 60).padStart(2, '0')}
+        </Text>
+
+        {isHost && (
+          <View style={styles.hostActions}>
+            <TouchableOpacity onPress={onMoveUp}>
+              <Text style={styles.actionBtn}>↑</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onMoveDown}>
+              <Text style={styles.actionBtn}>↓</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onDelete}>
+              <Text style={styles.actionBtn}>🗑</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* AVATAR À DROITE, EN DEHORS DU BLOC */}
       <TouchableOpacity
+        style={styles.avatarOutside}
         onPressIn={() => setShowTooltip(true)}
         onPressOut={() => setShowTooltip(false)}
       >
@@ -80,6 +87,7 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
           source={AVATARS[item.avatarIndex || 0]}
           style={styles.queueAvatar}
         />
+
         {showTooltip && (
           <View style={styles.tooltip}>
             <Text style={styles.tooltipText}>{item.pseudo}</Text>
@@ -87,25 +95,6 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
         )}
       </TouchableOpacity>
 
-      {/* Titre */}
-      <Text style={styles.queueTitle} numberOfLines={1}>
-        {item.titre}
-      </Text>
-
-      {/* Boutons hôte */}
-      {isHost && (
-        <View style={styles.hostActions}>
-          <TouchableOpacity onPress={onMoveUp}>
-            <Text style={styles.actionBtn}>↑</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onMoveDown}>
-            <Text style={styles.actionBtn}>↓</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onDelete}>
-            <Text style={styles.actionBtn}>🗑</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -123,7 +112,7 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
 // }
 
 // ─── Vue HÔTE : file d'attente ───────────────────────────────────────────────
-function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong }) {
+function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [songInput, setSongInput] = useState('');
   const [songs, setSongs] = useState([]);
@@ -158,23 +147,29 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
     <View style={styles.flex}>
       {/* Compteur */}
       <View style={styles.statsRow}>
-        <Text style={styles.statsText}>
-          {queue.length} titre{queue.length !== 1 ? 's' : ''} - {totalMinutesFormatted} minutes
-        </Text>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={styles.addBtnText}>+</Text>
-        </TouchableOpacity>
+        <Text style={styles.pageTitle}>File d'attente</Text>
+        <View style={styles.statsSubRow}>
+          <Text style={styles.statsText}>
+            {queue.length} titre{queue.length !== 1 ? 's' : ''} - {totalMinutesFormatted} minutes
+          </Text>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={styles.addBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.separator} />
       </View>
 
       {/* En-têtes */}
       <View style={styles.queueHeader}>
-        <Text style={styles.queueHeaderText}>Titre</Text>
-        <Text style={styles.queueHeaderText}>Artiste</Text>
-        {/* <Text style={styles.queueHeaderText}>Genre</Text> */}
-        <Text style={styles.queueHeaderText}>Durée</Text>
+        <Text style={[styles.queueHeaderText, styles.colTitle]}>Titre</Text>
+        <Text style={[styles.queueHeaderText, styles.colArtist]}>Artiste</Text>
+        <Text style={[styles.queueHeaderText, styles.colGenre]}>Genre</Text>
+        <Text style={[styles.queueHeaderText, styles.colDuration]}>Durée</Text>
+        <Text style={[styles.queueHeaderText, styles.colGenre]}>Actions</Text>
+
       </View>
 
       {/* Liste */}
@@ -186,9 +181,16 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
       ) : (
         <FlatList
           data={queue}
-          keyExtractor={(item, i) => `${item}-${i}`}
+          keyExtractor={(item, i) => `${item.id || i}-${i}`}
           renderItem={({ item, index }) => (
-            <QueueItem title={item} index={index} isHost />
+            <QueueItemWithAvatar
+              item={item}
+              index={index}
+              isHost
+              onDelete={() => onDeleteSong(index)}
+              onMoveUp={() => onMoveUp(index)}
+              onMoveDown={() => onMoveDown(index)}
+            />
           )}
           style={styles.flex}
           showsVerticalScrollIndicator={false}
@@ -199,14 +201,6 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
       {queue.length > 0 && (
         <TouchableOpacity style={styles.startSongBtn} onPress={onStartSong}>
           <Text style={styles.startSongBtnText}>▶ Lancer la chanson</Text>
-        </TouchableOpacity>
-      )}
-
-
-      {/* Vote skip */}
-      {queue.length > 0 && (
-        <TouchableOpacity style={styles.skipBtn} onPress={onVoteSkip}>
-          <Text style={styles.skipBtnText}>⏭ Passer ({skipVotes}/2)</Text>
         </TouchableOpacity>
       )}
 
@@ -240,11 +234,9 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
             {loading ? (
               <ActivityIndicator color="#F5E642" style={{ marginTop: 24 }} />
             ) : songs.length === 0 ? (
-              // Je pense pas que ce texte est important,on peut le retirer puisqu'il y a les toast
               <Text style={styles.emptyText}>
                 {songInput.length < 2 ? 'Tapez pour rechercher...' : 'Aucune chanson trouvée'}
               </Text>
-              // Regler le probleme avec les toast
             ) : (
               <FlatList
                 data={songs}
@@ -281,7 +273,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 const GENRES = [
   { label: 'Pop', emoji: '🎵' },
   { label: 'Rock', emoji: '🎸' },
-  // { label: 'Hip-Hop',           emoji: '🎤' },
+  { label: 'Hip-Hop', emoji: '🎤' },
   { label: 'R&B', emoji: '🎶' },
   { label: 'Soul', emoji: '🎼' },
   { label: 'Funk', emoji: '🕺' },
@@ -357,9 +349,6 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
 
   const handleSelectSong = (song) => {
     onAddSong(song.titre);
-    onAddSong(song.artiste);
-    onAddSong(song.genre);
-    onAddSong(song.duree);
     setModalVisible(false);
     setSearching(false);
     setSearchText('');
@@ -395,13 +384,6 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Vote skip */}
-      {queue.length > 0 && (
-        <TouchableOpacity style={styles.skipBtn} onPress={onVoteSkip}>
-          <Text style={styles.skipBtnText}>⏭ Passer ({skipVotes}/2)</Text>
-        </TouchableOpacity>
-      )}
 
       {/* Modal liste de chansons */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -457,11 +439,9 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
                 showsVerticalScrollIndicator={false}
               />
             )}
-
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }
@@ -481,6 +461,9 @@ export default function LobbyView({
   onVoteSkip,
   onLeave,
   onStartSong,
+  onDeleteSong,
+  onMoveUp,
+  onMoveDown,
 }) {
   const isHost = role === 'host';
 
@@ -517,6 +500,9 @@ export default function LobbyView({
               onAddSong={onAddSong}
               userCount={userCount}
               onStartSong={onStartSong}
+              onDeleteSong={onDeleteSong}
+              onMoveUp={onMoveUp}
+              onMoveDown={onMoveDown}
             />
           ) : (
             <GuestView
