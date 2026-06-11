@@ -30,11 +30,25 @@ const AVATARS = [
 ];
 
 // Choisir avatar basé sur singerId pour que tout le monde voie le même
-const getAvatarForUser = (userId) => {
-  if (!userId) return AVATARS[0];
+// const getAvatarForUser = (userId) => {
+//   if (!userId) return AVATARS[0];
+//   let hash = 0;
+//   for (let i = 0; i < userId.length; i++) {
+//     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+//   }
+//   return AVATARS[Math.abs(hash) % AVATARS.length];
+// };
+const getAvatarForUser = (singerId) => {
+  // Si singerId est un objet avec avatarIndex, l'utiliser directement
+  if (singerId?.avatarIndex !== undefined) {
+    return AVATARS[singerId.avatarIndex % AVATARS.length];
+  }
+  // Fallback sur hash si c'est une string
+  if (!singerId) return AVATARS[0];
   let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  const str = typeof singerId === 'string' ? singerId : JSON.stringify(singerId);
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   return AVATARS[Math.abs(hash) % AVATARS.length];
 };

@@ -10,7 +10,7 @@ import { getSocket, joinRoom, disconnectSocket } from '../services/socketService
 import { clearSession } from '../services/sessionService';
 
 export default function LobbyController({ route, navigation }) {
-  const { lobbyId, role } = route.params;
+  const { lobbyId, role, pseudo, avatarIndex } = route.params;
   const socketRef = useRef(null);
 
   const [isConnected, setIsConnected] = useState(false);
@@ -26,7 +26,7 @@ export default function LobbyController({ route, navigation }) {
     socketRef.current = socket;
 
     // Rejoindre la room
-    joinRoom(lobbyId);
+    joinRoom(lobbyId, pseudo, avatarIndex);
 
     if (socket.connected) {
       setIsConnected(true);

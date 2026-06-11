@@ -1,7 +1,7 @@
 function registerRoomHandlers(io, socket) {
 
   // Rejoindre une room
-  socket.on("join-room", ({ roomCode, pseudo, avatarIndex }) => {
+   socket.on("join-room", ({ roomCode, pseudo, avatarIndex }) => {
     const MAX_PLAYERS = 9;
     const room = io.sockets.adapter.rooms.get(roomCode);
     if (room && room.size >= MAX_PLAYERS) {
@@ -13,7 +13,7 @@ function registerRoomHandlers(io, socket) {
     io.to(roomCode).emit("user-joined", {
       userId: socket.id,
       pseudo,
-      avatarIndex
+      avatarIndex,
     });
   });
 

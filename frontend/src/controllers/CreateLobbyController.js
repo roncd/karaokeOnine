@@ -72,7 +72,12 @@ export default function CreateLobbyController({ navigation }) {
     } catch (err) {
       console.warn('Erreur création utilisateur :', err.message);
     }
-    navigation.navigate('Lobby', { lobbyId, role: 'host' });
+    navigation.navigate('Lobby', { 
+      lobbyId, 
+      role: 'host',
+      pseudo,
+      avatarIndex,
+    });
   };
 
   const handleBack = () => {
