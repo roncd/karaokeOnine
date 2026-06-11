@@ -6,7 +6,7 @@
  */
 
 const { roomQueues, roomSongIds, roomSingers } = require('../services/roomState');
-
+const pool = require('../db/db');
 // Stocke les timers actifs par room pour pouvoir les annuler
 const roomTimers = {};
 
@@ -24,7 +24,7 @@ function registerReadyHandlers(io, socket) {
     }
 
     const currentSong = roomQueues[roomCode]?.[0] ?? null;
-    const songId      = roomSongIds[roomCode]?.[0] ?? null;
+    const songId = roomSongIds[roomCode]?.[0] ?? null;
     const singerId = roomSingers[roomCode]?.[0] ?? socket.id;
     // Notifier tout le monde que le compte à rebours commence
     io.to(roomCode).emit('countdown-started', {
@@ -66,7 +66,7 @@ function registerReadyHandlers(io, socket) {
   });
 
   // Le chanteur clique "Prêt ?" avant la fin du compte à rebours
-  socket.on('player-ready', ({ roomCode }) => {
+  socket.on('player-ready', async ({ roomCode }) => {
 
     // Annuler le timer — le chanteur a répondu à temps
     if (roomTimers[roomCode]) {
@@ -75,8 +75,21 @@ function registerReadyHandlers(io, socket) {
     }
 
     const currentSong = roomQueues[roomCode]?.[0] ?? null;
-    const songId      = roomSongIds[roomCode]?.[0] ?? null;
+    const songId = roomSongIds[roomCode]?.[0] ?? null;
+    if (songId) {
+      try {
+        await pool.query(
+          `INSERT INTO queue (salon_id, user_id, song_id, position, status)
+       VALUES ($1, $2, $3, $4, 'En cours')
+       ON CONFLICT DO NOTHING`,
+          [roomCode, socket.id, songId, 1]
+        );
+      }
+      catch (err) {
+        console.error('Erreur persistance player ready (chanson en cours):', err.message);
+      }
 
+    }
     // Notifier tout le monde que le chanteur est prêt
     io.to(roomCode).emit('singer-ready', {
       singerId: socket.id,
