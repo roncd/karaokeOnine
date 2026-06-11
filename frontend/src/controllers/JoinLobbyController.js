@@ -63,7 +63,10 @@ export default function JoinLobbyController({ navigation }) {
       navigation.navigate('Lobby', {
         lobbyId: roomCode,
         role: 'guest',
+        pseudo,
+        avatarIndex,
       });
+        
     });
 
     socket.on('room-full', () => {

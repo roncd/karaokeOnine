@@ -27,15 +27,34 @@ export default function ReadyController({ route, navigation }) {
     joinRoom(lobbyId);
 
     // Déterminer si c'est le chanteur
-    if (socket.id === singerId) {
-      setIsSinger(true);
-    }
+    // if (socket.id === singerId) {
+    //   setIsSinger(true);
+    // }
 
-    socket.on('connect', () => {
-      if (socket.id === singerId) {
-        setIsSinger(true);
-      }
-    });
+    // socket.on('connect', () => {
+    //   if (socket.id === singerId) {
+    //     setIsSinger(true);
+    //   }
+    // });
+
+    const singerSocketId = singerId?.socketId || singerId;
+
+if (socket.id === singerSocketId) {
+  setIsSinger(true);
+}
+
+socket.on('connect', () => {
+  console.log('Nouveau socket.id après reconnexion:', socket.id);
+  joinRoom(lobbyId);
+  const singerSocketId = singerId?.socketId || singerId;
+  if (socket.id === singerSocketId) {
+    setIsSinger(true);
+  }
+});
+
+    console.log('socket.id:', socket.id);
+console.log('singerId reçu:', singerId);
+console.log('isSinger:', socket.id === singerId);
 
     // Le chanteur est prêt tout le monde va sur Lyrics
     socket.on('singer-ready', ({ singerId: readySingerId, currentSong, songId }) => {

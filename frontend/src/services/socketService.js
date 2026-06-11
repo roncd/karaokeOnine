@@ -16,18 +16,28 @@ export const getSocket = () => {
   return socket;
 };
 
-export const joinRoom = (roomCode, pseudo, avatarIndex) => {
-  if (currentRoom === roomCode) return;
-  currentRoom = roomCode;
+export const joinRoom = (roomCode, pseudo = 'Annonyme', avatarIndex = 0) => {
+  // if (currentRoom === roomCode) return;
+  // currentRoom = roomCode;
   const s = getSocket();
+  const payload = { roomCode, pseudo, avatarIndex };
   if (s.connected) {
-    s.emit('join-room', { roomCode, pseudo, avatarIndex });
+    s.emit('join-room', payload);
   } else {
     s.once('connect', () => {
-      s.emit('join-room', { roomCode, pseudo, avatarIndex });
+      s.emit('join-room', payload);
     });
   }
 };
+
+//   if (s.connected) {
+//     s.emit('join-room', { roomCode, pseudo, avatarIndex });
+//   } else {
+//     s.once('connect', () => {
+//       s.emit('join-room', { roomCode, pseudo, avatarIndex });
+//     });
+//   }
+// };
 
 export const disconnectSocket = () => {
   currentRoom = null;
