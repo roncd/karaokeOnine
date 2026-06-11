@@ -30,6 +30,8 @@ FROM base AS runtime
 COPY --from=dependencies --chown=app:app /app/node_modules ./node_modules
 COPY --chown=app:app package*.json ./
 
+ARG CACHE_BUST
+
 COPY --chown=app:app src ./src
 
 USER app
