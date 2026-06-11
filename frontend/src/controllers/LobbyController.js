@@ -10,7 +10,7 @@ import { getSocket, joinRoom, disconnectSocket } from '../services/socketService
 import { clearSession } from '../services/sessionService';
 
 export default function LobbyController({ route, navigation }) {
-  const { lobbyId, role, pseudo, avatarIndex } = route.params;
+  const { lobbyId, role, pseudo, avatarIndex: avatarIndexParam } = route.params;
   const socketRef = useRef(null);
 
   const [isConnected, setIsConnected] = useState(false);
@@ -20,13 +20,20 @@ export default function LobbyController({ route, navigation }) {
   const [userCount, setUserCount] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
   const [participants, setParticipants] = useState([]);
+  const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+
+  useEffect(() => {
+    if (avatarIndexParam !== undefined) {
+      avatarIndexRef.current = avatarIndexParam;
+    }
+  }, [avatarIndexParam]);
 
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
 
     // Rejoindre la room
-    joinRoom(lobbyId, pseudo, avatarIndex);
+    joinRoom(lobbyId, pseudo, avatarIndexRef.current);
 
     if (socket.connected) {
       setIsConnected(true);
@@ -93,11 +100,11 @@ export default function LobbyController({ route, navigation }) {
   }, [lobbyId]);
 
   const handleAddSong = (songTitle) => {
-    const titre = typeof songTitle === 'object' ? songTitle.titre : songTitle;
-    if (!titre?.trim()) return;
     socketRef.current?.emit('add-song', {
       roomCode: lobbyId,
-      songTitle: titre.trim(),
+      songTitle: songTitle.trim(),
+      pseudo: pseudo || 'Anonyme',
+      avatarIndex: avatarIndexRef.current,
     });
   };
 
@@ -144,6 +151,9 @@ export default function LobbyController({ route, navigation }) {
       onVoteSkip={handleVoteSkip}
       onLeave={handleLeave}
       onStartSong={handleStartSong}
+      onDeleteSong={handleDeleteSong}
+      onMoveUp={handleMoveUp}
+      onMoveDown={handleMoveDown}
     />
   );
 }
