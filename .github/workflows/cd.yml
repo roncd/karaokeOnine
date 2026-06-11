@@ -46,7 +46,9 @@ jobs:
           context: backend
           file: backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/karaoke-backend:staging
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/karaoke-backend:staging
+            ghcr.io/${{ github.repository_owner }}/karaoke-backend:${{ github.sha }}
           build-args: |
             BUILD_VERSION=staging-${{ github.sha }}
             VCS_REF=${{ github.sha }}
@@ -60,7 +62,9 @@ jobs:
           context: frontend
           file: frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/karaoke-frontend:staging
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/karaoke-frontend:staging
+            ghcr.io/${{ github.repository_owner }}/karaoke-frontend:${{ github.sha }}
           build-args: |
             BUILD_VERSION=staging-${{ github.sha }}
             VCS_REF=${{ github.sha }}
@@ -74,16 +78,18 @@ jobs:
           curl --fail --silent --show-error \
             --request POST \
             --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --header "Content-Type: application/json" \
             "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_STAGING_ID }}/deploys" \
-            --json '{}'
+            --data '{"imageUrl": "ghcr.io/${{ github.repository_owner }}/karaoke-backend:${{ github.sha }}"}'
 
       - name: Deploy frontend on Render
         run: |
           curl --fail --silent --show-error \
             --request POST \
             --header "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --header "Content-Type: application/json" \
             "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_STAGING_ID }}/deploys" \
-            --json '{}'
+            --data '{"imageUrl": "ghcr.io/${{ github.repository_owner }}/karaoke-frontend:${{ github.sha }}"}'
 
   deploy-prod:
     name: Deploy prod
