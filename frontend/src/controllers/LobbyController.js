@@ -93,10 +93,11 @@ export default function LobbyController({ route, navigation }) {
   }, [lobbyId]);
 
   const handleAddSong = (songTitle) => {
-    if (!songTitle?.trim()) return;
+    const titre = typeof songTitle === 'object' ? songTitle.titre : songTitle;
+    if (!titre?.trim()) return;
     socketRef.current?.emit('add-song', {
       roomCode: lobbyId,
-      songTitle: songTitle.trim(),
+      songTitle: titre.trim(),
     });
   };
 
