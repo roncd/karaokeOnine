@@ -10,12 +10,12 @@ import { getSocket, joinRoom } from '../services/socketService';
 import { saveSession } from '../services/sessionService';
 
 export default function JoinLobbyController({ navigation }) {
-  const [inputId, setInputId]         = useState('');
-  const [error, setError]             = useState('');
-  const [loading, setLoading]         = useState(false);
-  const [pseudo, setPseudo]           = useState('');
+  const [inputId, setInputId] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [pseudo, setPseudo] = useState('');
   const [avatarIndex, setAvatarIndex] = useState(0);
-  const socketRef                     = useRef(null);
+  const socketRef = useRef(null);
 
   const handleChangeId = (text) => {
     const cleaned = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
@@ -24,6 +24,7 @@ export default function JoinLobbyController({ navigation }) {
   };
 
   const handleJoin = () => {
+    const finalPseudo = pseudo.trim() || `Invité-${inputId.slice(0, 3)}`;
     const { valid, error: validationError } = LobbyModel.validateId(inputId);
     if (!valid) {
       setError(validationError);
@@ -42,14 +43,18 @@ export default function JoinLobbyController({ navigation }) {
       console.log('user-joined reçu :', userId);
       setLoading(false);
 
+
       // Enregistrer l'utilisateur en base
       try {
+        const salonRes = await fetch(`${API_URL}/api/salons/${roomCode}`);
+        const salonData = await salonRes.json();
+
         await fetch(`${API_URL}/api/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            salon_id: roomCode,
-            pseudo,
+            salon_id: salonData.id,
+            pseudo: finalPseudo,
             role: 'guest',
           }),
         });
@@ -63,10 +68,10 @@ export default function JoinLobbyController({ navigation }) {
       navigation.navigate('Lobby', {
         lobbyId: roomCode,
         role: 'guest',
-        pseudo,
+        pseudo: finalPseudo,
         avatarIndex,
       });
-        
+
     });
 
     socket.on('room-full', () => {
