@@ -29,7 +29,7 @@ export default StyleSheet.create({
     backgroundColor: YELLOW,
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -76,7 +76,7 @@ export default StyleSheet.create({
   queuePanel: { gap: 8 },
   queueItem: {
     backgroundColor: CARD,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 14,
   },

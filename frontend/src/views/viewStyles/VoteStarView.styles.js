@@ -10,11 +10,11 @@ export default StyleSheet.create({
   },
 
   // Logo
-logo: {
-  width: 60,
-  height: 60,
-  resizeMode: 'contain',
-},
+  logo: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
   // Contenu principal
   container: {
     flex: 1,
@@ -29,6 +29,12 @@ logo: {
     fontWeight: '900',
     letterSpacing: 1,
     textAlign: 'center',
+    ...Platform.select({
+      web: {
+        fontFamily: '"Fredoka", "Nunito", "Varela Round", sans-serif',
+      },
+      default: {},
+    }),
   },
 
   // Grille
@@ -60,16 +66,16 @@ logo: {
     borderWidth: 2.5,
   },
   hostIcon: {
-  width: 20,
-  height: 20,
-  resizeMode: 'contain',
-},
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
+  },
   // Bouton confirmer
   confirmBtn: {
     backgroundColor: YELLOW,
     paddingVertical: 16,
     paddingHorizontal: 48,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   confirmBtnDisabled: {
     opacity: 0.35,
@@ -132,7 +138,7 @@ logo: {
     backgroundColor: YELLOW,
     paddingVertical: 16,
     paddingHorizontal: 48,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   continueBtnText: {
     color: '#0D0D0D',

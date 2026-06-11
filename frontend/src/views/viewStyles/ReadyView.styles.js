@@ -46,7 +46,7 @@ export default StyleSheet.create({
     backgroundColor: YELLOW,
     paddingVertical: 14,
     paddingHorizontal: 48,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   readyBtnText: {
     color: '#0D0D0D',
@@ -59,7 +59,7 @@ export default StyleSheet.create({
   waitingBadge: {
     paddingVertical: 10,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.3)',
   },

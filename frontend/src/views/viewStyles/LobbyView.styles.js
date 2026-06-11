@@ -82,16 +82,23 @@ export default StyleSheet.create({
 
   // Host — file d'attente
   statsRow: {
+    width: '100%',
+    marginBottom: 10,
+  },
+
+  statsSubRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    width: '100%',
   },
+
   statsText: {
     color: '#fff',
-    fontSize: 13,
-    opacity: 0.6,
+    fontSize: 14,
+    opacity: 0.7,
   },
+
   addBtn: {
     backgroundColor: YELLOW,
     width: 36,
@@ -99,6 +106,12 @@ export default StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  separator: {
+    width: '100%',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginVertical: 12,
   },
   addBtnText: {
     color: '#0D0D0D',
@@ -108,52 +121,24 @@ export default StyleSheet.create({
   },
   queueHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    alignItems: 'center',
     marginBottom: 8,
   },
+
   queueHeaderText: {
     color: '#fff',
     fontSize: 12,
     opacity: 0.4,
     letterSpacing: 1,
     textTransform: 'uppercase',
+    textAlign: 'left',
   },
-  queueItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: CARD,
-    borderRadius: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-  },
-  queueItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
+
   queueIndex: {
     color: YELLOW,
     fontWeight: '800',
     fontSize: 14,
     width: 20,
-  },
-  queueTitle: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '500',
-    flex: 1,
-  },
-  queueDots: { paddingLeft: 8 },
-  queueDotsText: { color: '#888', fontSize: 18, letterSpacing: 2 },
-  queueCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   emptyQueue: {
     flex: 1,
@@ -163,23 +148,6 @@ export default StyleSheet.create({
   },
   emptyText: { color: '#fff', fontSize: 16, fontWeight: '700', opacity: 0.5 },
   emptyHint: { color: '#fff', fontSize: 13, opacity: 0.3 },
-
-  // Skip
-  skipBtn: {
-    borderWidth: 1.5,
-    borderColor: YELLOW,
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  skipBtnText: {
-    color: YELLOW,
-    fontWeight: '700',
-    fontSize: 14,
-    letterSpacing: 1,
-  },
 
   // Guest — catalogue
   catalogueHeader: {
@@ -193,6 +161,12 @@ export default StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 2,
+    ...Platform.select({
+      web: {
+        fontFamily: '"Fredoka", "Nunito", "Varela Round", sans-serif',
+      },
+      default: {},
+    }),
   },
   searchIcon: { fontSize: 20 },
   genreGrid: {
@@ -220,19 +194,20 @@ export default StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     opacity: 0.5,
-    flex: 1,
+    textAlign: 'left',
   },
   queueGenre: {
     color: YELLOW,
     fontSize: 11,
     opacity: 0.7,
     marginHorizontal: 4,
+    textAlign: 'left',
   },
   queueDuree: {
     color: '#fff',
-    fontSize: 12,
     opacity: 0.5,
-    marginRight: 8,
+    fontSize: 12,
+    textAlign: 'left',
   },
 
   // Modal
@@ -287,8 +262,6 @@ export default StyleSheet.create({
   },
   modalConfirmText: { color: '#0D0D0D', fontWeight: '800', fontSize: 15 },
 
-  // Ajouter ces styles dans StyleSheet.create({}) de LobbyView.js
-
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -342,20 +315,12 @@ export default StyleSheet.create({
     opacity: 0.7,
     marginLeft: 8,
   },
-  emptyText: {
-    color: '#fff',
-    opacity: 0.4,
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 14,
-  },
-
   startSongBtn: {
     backgroundColor: YELLOW,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 12,
+    marginVertical: 15,
   },
   startSongBtnText: {
     color: '#0D0D0D',
@@ -363,28 +328,34 @@ export default StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1,
   },
-
   queueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: CARD,
-    borderRadius: 8,
-    padding: 10,
-    gap: 10,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  avatarOutside: {
+    marginLeft: 12,
+    marginRight: 4,
   },
   queueAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+
+  queueItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingRight: 50,
   },
   queueTitle: {
-    flex: 1,
     color: '#fff',
     fontSize: 13,
-  },
-  hostActions: {
-    flexDirection: 'row',
-    gap: 8,
+    textAlign: 'left',
   },
   actionBtn: {
     fontSize: 16,
@@ -406,4 +377,34 @@ export default StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+
+  pageTitle: {
+    fontFamily: Platform.OS === 'web' ? 'Fredoka' : 'System',
+    fontSize: 26,
+    fontWeight: '700',
+    color: YELLOW,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  queueAvatarInitial: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueAvatarText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  hostActions: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+  },
+  colTitle: { width: 140 },
+  colArtist: { width: 100 },
+  colGenre: { width: 70 },
+  colDuration: { width: 70 },
 });

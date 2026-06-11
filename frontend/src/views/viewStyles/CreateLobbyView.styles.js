@@ -34,6 +34,12 @@ export default StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     letterSpacing: 1,
+    ...Platform.select({
+      web: {
+        fontFamily: '"Fredoka", "Nunito", "Varela Round", sans-serif',
+      },
+      default: {},
+    }),
   },
   subtitle: {
     color: '#fff',
@@ -51,7 +57,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: YELLOW,
-    borderRadius: 8,
+    borderRadius: 14,
     paddingVertical: 10,
     marginTop: 10,
     paddingHorizontal: 24,
@@ -70,15 +76,15 @@ export default StyleSheet.create({
     padding: 4,
   },
   copyIcon: {
-    color: YELLOW,
-    fontSize: 22,
+    width: 15,
+    height: 15,
   },
 
   // Pseudo avatar
   pseudoInput: {
     borderWidth: 1,
     borderColor: 'rgba(245,230,66,0.4)',
-    borderRadius: 8,
+    borderRadius: 14,
     color: '#fff',
     fontSize: 16,
     paddingVertical: 12,
@@ -94,7 +100,7 @@ export default StyleSheet.create({
   generateBtn: {
     backgroundColor: YELLOW,
     paddingVertical: 18,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
   },
   generateBtnText: {
@@ -107,7 +113,7 @@ export default StyleSheet.create({
     borderWidth: 1.5,
     borderColor: YELLOW,
     paddingVertical: 18,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
   },
   startBtnText: {
