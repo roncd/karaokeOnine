@@ -84,7 +84,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 22,
-    borderRadius: 999,
+    borderRadius: 14,
     backgroundColor: YELLOW,
   },
   buttonCompact: {

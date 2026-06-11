@@ -34,6 +34,13 @@ export default StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     letterSpacing: 1,
+    ...Platform.select({
+      web: {
+        fontFamily: '"Fredoka", "Nunito", "Varela Round", sans-serif',
+      },
+      default: {},
+    }),
+
   },
   subtitle: {
     color: '#fff',
@@ -49,7 +56,7 @@ export default StyleSheet.create({
   input: {
     borderWidth: 1.5,
     borderColor: YELLOW,
-    borderRadius: 8,
+    borderRadius: 14,
     color: YELLOW,
     fontSize: 26,
     fontWeight: '900',
@@ -73,7 +80,7 @@ export default StyleSheet.create({
   pseudoInput: {
     borderWidth: 1,
     borderColor: 'rgba(245,230,66,0.4)',
-    borderRadius: 8,
+    borderRadius: 14,
     color: '#fff',
     fontSize: 16,
     paddingVertical: 12,
@@ -85,7 +92,7 @@ export default StyleSheet.create({
   joinBtn: {
     backgroundColor: YELLOW,
     paddingVertical: 18,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
   },
   joinBtnDisabled: {
@@ -96,6 +103,6 @@ export default StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
     letterSpacing: 1,
-    marginTop:10
+    marginTop: 10
   },
 });

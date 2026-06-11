@@ -4,26 +4,36 @@ const {
   roomSongIds,
   roomSingers,
 } = require('../services/roomState');
-
+const pool = require('../db/db');
 function registerVoteHandlers(io, socket) {
 
-  socket.on("vote-skip", ({ roomCode }) => {
+  socket.on("vote-skip", async ({ roomCode }) => {
 
     if (!roomVotes[roomCode]) {
       roomVotes[roomCode] = 0;
     }
-
     roomVotes[roomCode]++;
-
     console.log(`Vote skip dans ${roomCode} : ${roomVotes[roomCode]}`);
-
     io.to(roomCode).emit("skip-updated", { votes: roomVotes[roomCode] });
 
     if (roomVotes[roomCode] >= 2) {
-
       if (roomQueues[roomCode]?.length > 0) {
+        const songId = roomSongIds[roomCode]?.[0];
         const skippedSong = roomQueues[roomCode].shift();
 
+        if (songId) {
+          try {
+            await pool.query(
+              `INSERT INTO queue (salon_id, user_id, song_id, position, status)
+            VALUES ($1, $2, $3, $4, 'Skippé')
+            ON CONFLICT DO NOTHING`,
+              [roomCode, socket.id, songId, 1]
+            );
+          }
+          catch (err) {
+            console.error('Erreur persistance skip:', err.message);
+          }
+        }
         // Nettoyer aussi songIds et singers
         if (roomSongIds[roomCode]?.length > 0) roomSongIds[roomCode].shift();
         if (roomSingers[roomCode]?.length > 0) roomSingers[roomCode].shift();
