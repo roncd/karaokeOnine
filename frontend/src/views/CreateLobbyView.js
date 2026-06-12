@@ -6,14 +6,14 @@ import {
   StyleSheet,
   SafeAreaView,
   Image,
-  ActivityIndicator,
-  TextInput
+  TextInput,
+  Clipboard
 } from 'react-native';
 
 import styles from './viewStyles/CreateLobbyView.styles';
 import AvatarPicker from '../components/AvatarPicker';
 
-export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pseudo, onChangePseudo, avatarIndex, onSelectAvatar }) {
+export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pseudo, onChangePseudo, avatarIndex, onSelectAvatar, onGenerate }) {
   const handleCopy = async () => {
     try {
       if (navigator?.clipboard?.writeText) {
@@ -39,7 +39,7 @@ export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pse
         {/* Titre */}
         <View style={styles.titleBlock}>
           <Text style={styles.title}>Créer un salon</Text>
-          <Text style={styles.subtitle}>Générez un code unique à 6 chiffres</Text>
+          <Text style={styles.subtitle}>Générez un code unique à 6 caractères</Text>
         </View>
 
         {/* Code */}
@@ -47,15 +47,17 @@ export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pse
           {lobbyId ? (
             <View style={styles.codeRow}>
               <Text style={styles.codeText}>{lobbyId}</Text>
-              <TouchableOpacity onPress={handleCopy} style={styles.copyBtn}>
-                <Image
+              <TouchableOpacity onPress={() => Clipboard.setString(lobbyId)} style={styles.copyBtn}>
+             <Image
                   source={require('../../assets/icon/copie-icon.png')}
                   style={styles.copyIcon}
                 />
-              </TouchableOpacity>
+            </TouchableOpacity>
             </View>
           ) : (
-            <ActivityIndicator color="#F5E642" size="large" />
+            <Text style={{ color: 'rgba(245,230,66,0.3)', fontSize: 28, letterSpacing: 10 }}>
+              ------
+            </Text>
           )}
         </View>
 
@@ -82,14 +84,9 @@ export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pse
 
         {/* Boutons */}
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.generateBtn}
-            onPress={onShare}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.generateBtnText}>Générer</Text>
+          <TouchableOpacity style={styles.generateBtn} onPress={onGenerate} activeOpacity={0.8}>
+          <Text style={styles.generateBtnText}>Générer</Text>
           </TouchableOpacity>
-
           {onStart && (
             <TouchableOpacity
               style={styles.startBtn}
