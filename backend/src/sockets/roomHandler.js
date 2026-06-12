@@ -1,7 +1,10 @@
+const { socketToUserId } = require('./userMap');
+
 function registerRoomHandlers(io, socket) {
 
   // Rejoindre une room
-   socket.on("join-room", ({ roomCode, pseudo, avatarIndex }) => {
+   socket.on("join-room", ({ roomCode, pseudo, avatarIndex, userId }) => {
+    socketToUserId[socket.id] = userId;
     const MAX_PLAYERS = 9;
     const room = io.sockets.adapter.rooms.get(roomCode);
     if (room && room.size >= MAX_PLAYERS) {
@@ -25,6 +28,9 @@ function registerRoomHandlers(io, socket) {
     });
   });
 
+  socket.on("disconnect", () => {
+  delete socketToUserId[socket.id];
+});
 }
 
 module.exports = registerRoomHandlers;

@@ -2,7 +2,7 @@
  * JoinLobbyController.js
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { LobbyModel } from '../models/LobbyModel';
 import JoinLobbyView from '../views/JoinLobbyView';
 import { API_URL } from '../config';
@@ -23,7 +23,7 @@ export default function JoinLobbyController({ navigation }) {
     if (error) setError('');
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     const finalPseudo = pseudo.trim() || `Invité-${inputId.slice(0, 3)}`;
     const { valid, error: validationError } = LobbyModel.validateId(inputId);
     if (!valid) {
@@ -34,33 +34,25 @@ export default function JoinLobbyController({ navigation }) {
     const roomCode = LobbyModel.normaliseId(inputId);
     setLoading(true);
 
-    const socket = getSocket();
-    socketRef.current = socket;
+    // Enregistrer l'utilisateur en base
+    try {
+      const salonRes = await fetch(`${API_URL}/api/salons/${roomCode}`);
+      const salonData = await salonRes.json();
 
-    joinRoom(roomCode);
+      const userRes = await fetch(`${API_URL}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salon_id: salonData.id,
+          pseudo: finalPseudo,
+          role: 'guest',
+          avatarIndex,
+        }),
+      });
 
-    socket.once('user-joined', async ({ userId }) => {
-      console.log('user-joined reçu :', userId);
-      setLoading(false);
+      const user = await userRes.json();
 
-
-      // Enregistrer l'utilisateur en base
-      try {
-        const salonRes = await fetch(`${API_URL}/api/salons/${roomCode}`);
-        const salonData = await salonRes.json();
-
-        await fetch(`${API_URL}/api/users`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            salon_id: salonData.id,
-            pseudo: finalPseudo,
-            role: 'guest',
-          }),
-        });
-      } catch (err) {
-        console.warn('Erreur création utilisateur :', err.message);
-      }
+      joinRoom(roomCode, pseudo, avatarIndex, user.id);
 
       // Sauvegarder la session localement
       await saveSession({ lobbyId: roomCode, role: 'guest' });
@@ -72,7 +64,16 @@ export default function JoinLobbyController({ navigation }) {
         avatarIndex,
       });
 
-    });
+    } catch (err) {
+      console.warn('Erreur création utilisateur :', err.message);
+      setError("Impossible de rejoindre le salon.");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const socket = getSocket();
+    socketRef.current = socket;
 
     socket.on('room-full', () => {
       setError('full');
@@ -84,7 +85,12 @@ export default function JoinLobbyController({ navigation }) {
       setError('Impossible de se connecter au serveur.');
       setLoading(false);
     });
-  };
+    return () => {
+      socket.off('room-full');
+      socket.off('connect_error');
+    };
+  }, []);
+
 
   const handleBack = () => {
     navigation.goBack();

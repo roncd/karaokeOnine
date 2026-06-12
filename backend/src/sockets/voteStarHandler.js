@@ -12,12 +12,17 @@ const roomParticipants = {};
 function registerVoteStarHandlers(io, socket) {
 
   // Enregistrer le participant dans la room
-  socket.on('join-room', (roomCode) => {
+  socket.on('join-room', ({ roomCode, pseudo, avatarIndex }) => {
     if (!roomParticipants[roomCode]) {
       roomParticipants[roomCode] = [];
     }
-    if (!roomParticipants[roomCode].includes(socket.id)) {
-      roomParticipants[roomCode].push(socket.id);
+    const exists = roomParticipants[roomCode].some(p => p.id === socket.id);
+    if (!exists) {
+      roomParticipants[roomCode].push({
+        id: socket.id,
+        pseudo: pseudo,
+        avatarIndex: avatarIndex,
+      });
     }
   });
 
@@ -39,7 +44,7 @@ function registerVoteStarHandlers(io, socket) {
     console.log(`Vote star dans ${roomCode} : ${socket.id} vote pour ${votedFor}`);
 
     const totalParticipants = (roomParticipants[roomCode] || []).length;
-    const totalVotes        = Object.keys(roomVotesStar[roomCode]).length;
+    const totalVotes = Object.keys(roomVotesStar[roomCode]).length;
 
     // Quand tout le monde a voté → calculer le gagnant
     if (totalVotes >= totalParticipants) {

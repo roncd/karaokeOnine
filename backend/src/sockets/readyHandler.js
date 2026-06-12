@@ -9,6 +9,7 @@ const { roomQueues, roomSongIds, roomSingers } = require('../services/roomState'
 const pool = require('../db/db');
 // Stocke les timers actifs par room pour pouvoir les annuler
 const roomTimers = {};
+const { socketToUserId } = require('./userMap');
 
 const COUNTDOWN_SECONDS = 10;
 
@@ -29,7 +30,7 @@ function registerReadyHandlers(io, socket) {
     // Notifier tout le monde que le compte à rebours commence
     io.to(roomCode).emit('countdown-started', {
       duration: COUNTDOWN_SECONDS,
-      currentSong: currentSong.titre,
+      currentSong: currentSong?.titre ?? null,
       songId,
       singerId,
     });
@@ -67,7 +68,12 @@ function registerReadyHandlers(io, socket) {
 
   // Le chanteur clique "Prêt ?" avant la fin du compte à rebours
   socket.on('player-ready', async ({ roomCode }) => {
+    const userId = socketToUserId[socket.id];
 
+    if (!userId) {
+      console.warn("Erreur: userId introuvable pour socket", socket.id);
+      return;
+    }
     // Annuler le timer — le chanteur a répondu à temps
     if (roomTimers[roomCode]) {
       clearTimeout(roomTimers[roomCode]);
@@ -78,11 +84,13 @@ function registerReadyHandlers(io, socket) {
     const songId = roomSongIds[roomCode]?.[0] ?? null;
     if (songId) {
       try {
+        const userId = socketToUserId[socket.id];
+        console.log("READY:", socket.id, "mapped to user_id:", socketToUserId[socket.id]);
         await pool.query(
           `INSERT INTO queue (salon_id, user_id, song_id, position, status)
        VALUES ($1, $2, $3, $4, 'En cours')
        ON CONFLICT DO NOTHING`,
-          [roomCode, socket.id, songId, 1]
+          [roomCode, userId, songId, 1]
         );
       }
       catch (err) {

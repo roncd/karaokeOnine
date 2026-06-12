@@ -5,6 +5,8 @@ const {
   roomSingers,
 } = require('../services/roomState');
 const pool = require('../db/db');
+const { socketToUserId } = require('./userMap');
+
 function registerVoteHandlers(io, socket) {
 
   socket.on("vote-skip", async ({ roomCode }) => {
@@ -23,11 +25,12 @@ function registerVoteHandlers(io, socket) {
 
         if (songId) {
           try {
-            await pool.query(
+            const userId = socketToUserId[socket.id];
+            console.log("SKIP:", socket.id, "→ user_id:", socketToUserId[socket.id]); await pool.query(
               `INSERT INTO queue (salon_id, user_id, song_id, position, status)
             VALUES ($1, $2, $3, $4, 'Skippé')
             ON CONFLICT DO NOTHING`,
-              [roomCode, socket.id, songId, 1]
+              [roomCode, userId, songId, 1]
             );
           }
           catch (err) {
