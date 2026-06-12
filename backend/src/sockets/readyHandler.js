@@ -11,6 +11,8 @@ const pool = require('../db/db');
 const roomTimers = {};
 const { socketToUserId } = require('./userMap');
 
+const {socketToUserId} = require('./roomHandler'); // Pour associer socket.id à userId dans la BDD
+
 const COUNTDOWN_SECONDS = 10;
 
 function registerReadyHandlers(io, socket) {
