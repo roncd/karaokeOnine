@@ -6,55 +6,46 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReadyView from '../views/ReadyView';
-import { getSocket, joinRoom } from '../services/socketService';
+import { getSocket } from '../services/socketService';
 
 const COUNTDOWN = 10;
 
 export default function ReadyController({ route, navigation }) {
-  const { lobbyId, role, singerId, currentSong, songId } = route.params;
+  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam } = route.params;
 
-  const socketRef             = useRef(null);
-  const timerRef              = useRef(null);
+  const socketRef = useRef(null);
+  const timerRef = useRef(null);
   const [timeLeft, setTimeLeft] = useState(COUNTDOWN);
-  const [skipped, setSkipped]   = useState(false);
+  const [skipped, setSkipped] = useState(false);
   const [isSinger, setIsSinger] = useState(false);
+  const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+
+  useEffect(() => {
+    if (avatarIndexParam !== undefined) {
+      avatarIndexRef.current = avatarIndexParam;
+    }
+  }, [avatarIndexParam]);
 
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
 
-    // Rejoindre la room
-    joinRoom(lobbyId);
-
-    // Déterminer si c'est le chanteur
-    // if (socket.id === singerId) {
-    //   setIsSinger(true);
-    // }
-
-    // socket.on('connect', () => {
-    //   if (socket.id === singerId) {
-    //     setIsSinger(true);
-    //   }
-    // });
-
     const singerSocketId = singerId?.socketId || singerId;
+    if (socket.id === singerSocketId) {
+      setIsSinger(true);
+    }
 
-if (socket.id === singerSocketId) {
-  setIsSinger(true);
-}
+    socket.on('connect', () => {
+      console.log('Nouveau socket.id après reconnexion:', socket.id);
 
-socket.on('connect', () => {
-  console.log('Nouveau socket.id après reconnexion:', socket.id);
-  joinRoom(lobbyId);
-  const singerSocketId = singerId?.socketId || singerId;
-  if (socket.id === singerSocketId) {
-    setIsSinger(true);
-  }
-});
+      const singerSocketId = singerId?.socketId || singerId;
+      if (socket.id === singerSocketId) {
+        setIsSinger(true);
+      }
+    });
 
     console.log('socket.id:', socket.id);
-console.log('singerId reçu:', singerId);
-console.log('isSinger:', socket.id === singerId);
+    console.log('singerId reçu:', singerId);
 
     // Le chanteur est prêt tout le monde va sur Lyrics
     socket.on('singer-ready', ({ singerId: readySingerId, currentSong, songId }) => {
