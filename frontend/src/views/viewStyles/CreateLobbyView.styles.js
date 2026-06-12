@@ -64,7 +64,6 @@ export default StyleSheet.create({
     gap: 16,
     backgroundColor: CARD,
     width: '100%',
-    justifyContent: 'space-between',
   },
   codeText: {
     color: YELLOW,
@@ -97,6 +96,26 @@ export default StyleSheet.create({
   actions: {
     gap: 12,
   },
+  inputBlock: {
+  justifyContent: 'center',
+  gap: 12,
+},
+
+input: {
+  borderWidth: 1.5,
+  borderColor: '#F5E642',
+  borderRadius: 14,
+  color: '#F5E642',
+  fontSize: 26,
+  fontWeight: '900',
+  letterSpacing: 16,
+  textAlign: 'center',
+  paddingVertical: 10,
+  marginVertical: 10,
+  paddingHorizontal: 16,
+  backgroundColor: '#0D4D72',
+},
+
   generateBtn: {
     backgroundColor: YELLOW,
     paddingVertical: 18,
