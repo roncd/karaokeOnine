@@ -273,7 +273,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 const GENRES = [
   { label: 'Pop', emoji: '🎵' },
   { label: 'Rock', emoji: '🎸' },
-  { label: 'Hip-Hop', emoji: '🎤' },
+  { label: 'Rap', emoji: '🎤' },
   { label: 'R&B', emoji: '🎶' },
   { label: 'Soul', emoji: '🎼' },
   { label: 'Funk', emoji: '🕺' },
