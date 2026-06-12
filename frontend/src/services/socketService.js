@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 import { API_URL } from '../config';
 
-const SOCKET_URL = API_URL;;
+const SOCKET_URL = API_URL;
 
 let socket = null;
 let currentRoom = null;
@@ -16,11 +16,10 @@ export const getSocket = () => {
   return socket;
 };
 
-export const joinRoom = (roomCode, pseudo = 'Annonyme', avatarIndex = 0) => {
-  // if (currentRoom === roomCode) return;
-  // currentRoom = roomCode;
+export const joinRoom = (roomCode, pseudo, avatarIndex, userId) => {
   const s = getSocket();
-  const payload = { roomCode, pseudo, avatarIndex };
+  const payload = { roomCode, pseudo, avatarIndex, userId };
+
   if (s.connected) {
     s.emit('join-room', payload);
   } else {
@@ -30,14 +29,6 @@ export const joinRoom = (roomCode, pseudo = 'Annonyme', avatarIndex = 0) => {
   }
 };
 
-//   if (s.connected) {
-//     s.emit('join-room', { roomCode, pseudo, avatarIndex });
-//   } else {
-//     s.once('connect', () => {
-//       s.emit('join-room', { roomCode, pseudo, avatarIndex });
-//     });
-//   }
-// };
 
 export const disconnectSocket = () => {
   currentRoom = null;
