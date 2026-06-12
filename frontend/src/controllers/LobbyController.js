@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import LobbyView from '../views/LobbyView';
-import { getSocket, joinRoom, disconnectSocket } from '../services/socketService';
+import { getSocket, disconnectSocket } from '../services/socketService';
 import { clearSession } from '../services/sessionService';
 
 export default function LobbyController({ route, navigation }) {
@@ -31,9 +31,6 @@ export default function LobbyController({ route, navigation }) {
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
-
-    // Rejoindre la room
-    joinRoom(lobbyId, pseudo, avatarIndexRef.current);
 
     if (socket.connected) {
       setIsConnected(true);
@@ -103,7 +100,7 @@ export default function LobbyController({ route, navigation }) {
     socketRef.current?.emit('add-song', {
       roomCode: lobbyId,
       songTitle: songTitle.trim(),
-      pseudo: pseudo || 'Anonyme',
+      pseudo: pseudo,
       avatarIndex: avatarIndexRef.current,
     });
   };

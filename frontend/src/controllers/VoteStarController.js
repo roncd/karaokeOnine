@@ -1,21 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import VoteStarView from '../views/VoteStarView';
-import { getSocket, joinRoom, disconnectSocket } from '../services/socketService';
+import { getSocket, disconnectSocket } from '../services/socketService';
 
 export default function VoteStarController({ route, navigation }) {
-  const { lobbyId, role, hostId } = route.params;
+  const { lobbyId, role, hostId, pseudo, avatarIndex: avatarIndexParam } = route.params;
 
-  const socketRef                       = useRef(null);
+  const socketRef = useRef(null);
   const [participants, setParticipants] = useState([]);
-  const [selectedId, setSelectedId]     = useState(null);
-  const [winner, setWinner]             = useState(null);
-  const [hasVoted, setHasVoted]         = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [winner, setWinner] = useState(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+
+  useEffect(() => {
+    if (avatarIndexParam !== undefined) {
+      avatarIndexRef.current = avatarIndexParam;
+    }
+  }, [avatarIndexParam]);
 
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
-
-    joinRoom(lobbyId);
 
     if (socket.connected) {
       socket.emit('get-participants', { roomCode: lobbyId });
@@ -29,9 +34,9 @@ export default function VoteStarController({ route, navigation }) {
       setParticipants(participants);
     });
 
-    socket.on('user-joined', ({ userId }) => {
+    socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
       setParticipants((prev) =>
-        prev.includes(userId) ? prev : [...prev, userId]
+        prev.some(p => p.id === userId) ? prev : [...prev, { id: userId, pseudo, avatarIndex }]
       );
     });
 
@@ -39,11 +44,16 @@ export default function VoteStarController({ route, navigation }) {
       setWinner({ id: winnerId, votes });
     });
 
+    socket.on('connect_error', (err) => {
+      console.warn('Erreur socket vote star :', err.message);
+    });
+
     return () => {
       socket.off('connect');
       socket.off('participants-list');
       socket.off('user-joined');
       socket.off('vote-result');
+      socket.off('connect_error');
     };
   }, [lobbyId]);
 

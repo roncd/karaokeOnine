@@ -13,14 +13,14 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  Image, 
+  Image,
 } from 'react-native';
 
 // const YELLOW = '#F5E642';
 // const BG     = '#0B3D5E';
 import styles from './viewStyles/VoteStarView.styles';
 // ─── Avatar cliquable ─────────────────────────────────────────────────────────
-function AvatarItem({ userId, isHost, isSelected, hasVoted, onSelect }) {
+function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted, onSelect }) {
   return (
     <TouchableOpacity
       style={styles.avatarWrapper}
@@ -29,10 +29,11 @@ function AvatarItem({ userId, isHost, isSelected, hasVoted, onSelect }) {
       activeOpacity={0.7}
     >
       <View style={[styles.avatarCircle, isSelected && styles.avatarCircleSelected]} />
-      {isHost && <Image 
-  source={require('../../assets/icon/icon_hote_karaoke.png')}
-  style={styles.hostIcon}
-/>}
+      {isHost && <Image
+        source={require('../../assets/icon/icon_hote_karaoke.png')}
+        style={styles.hostIcon}
+      />}
+      <Text style={{ color: '#fff', fontSize: 11, marginTop: 4 }}>{pseudo}</Text>
     </TouchableOpacity>
   );
 }
@@ -55,64 +56,66 @@ export default function VoteStarView({
   selectedId,
   winner,
   hasVoted,
-  hostId, 
+  hostId,
   onSelect,
   onConfirm,
   onContinue,
 }) {
   return (
     <>
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safe}>
+        <StatusBar barStyle="light-content" />
 
-      {/* Logo */}
-      <Image 
-        source={require('../../assets/logo/logo_karaoke.png')} 
-        style={styles.logo}
-      />
+        {/* Logo */}
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
+          style={styles.logo}
+        />
 
-      {winner ? (
-        <WinnerScreen winner={winner} onContinue={onContinue} />
-      ) : (
-        <View style={styles.container}>
+        {winner ? (
+          <WinnerScreen winner={winner} onContinue={onContinue} />
+        ) : (
+          <View style={styles.container}>
 
-          <Text style={styles.title}>Vote pour la star</Text>
+            <Text style={styles.title}>Vote pour la star</Text>
 
-          {/* Grille avatars */}
-          <View style={styles.grid}>
-            {participants.map((userId) => (
-              <AvatarItem
-                key={userId}
-                userId={userId}
-                isHost={userId === hostId}
-                isSelected={selectedId === userId}
-                hasVoted={hasVoted}
-                onSelect={onSelect}
-              />
-            ))}
+            {/* Grille avatars */}
+            <View style={styles.grid}>
+              {participants.map((p) => (
+                <AvatarItem
+                  key={p.id}
+                  userId={p.id}
+                  pseudo={p.pseudo}
+                  avatarIndex={p.avatarIndex}
+                  isHost={p.id === hostId}
+                  isSelected={selectedId === p.id}
+                  hasVoted={hasVoted}
+                  onSelect={onSelect}
+                />
+              ))}
+            </View>
+
+            {/* Message après vote */}
+            {hasVoted && !winner && (
+              <Text style={styles.waitingText}>Vote enregistré, en attente des autres...</Text>
+            )}
+
+            {/* Bouton confirmer */}
+            {!hasVoted && (
+              <TouchableOpacity
+                style={[styles.confirmBtn, !selectedId && styles.confirmBtnDisabled]}
+                onPress={onConfirm}
+                disabled={!selectedId}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.confirmBtnText}>Confirmer</Text>
+              </TouchableOpacity>
+            )}
+
           </View>
-
-          {/* Message après vote */}
-          {hasVoted && !winner && (
-            <Text style={styles.waitingText}>Vote enregistré, en attente des autres...</Text>
-          )}
-
-          {/* Bouton confirmer */}
-          {!hasVoted && (
-            <TouchableOpacity
-              style={[styles.confirmBtn, !selectedId && styles.confirmBtnDisabled]}
-              onPress={onConfirm}
-              disabled={!selectedId}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.confirmBtnText}>Confirmer</Text>
-            </TouchableOpacity>
-          )}
-
-        </View>
-      )}
-    </SafeAreaView>
-    <Toast message="Vote enregistré !" type="success" />
+        )}
+      </SafeAreaView>
+      <Toast message="Vote enregistré !" type="success" />
     </>
   );
 }

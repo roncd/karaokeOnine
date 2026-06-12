@@ -14,29 +14,72 @@ export default function CreateLobbyController({ navigation }) {
   const [lobbyId, setLobbyId] = useState('');
   const [pseudo, setPseudo] = useState('');
   const [avatarIndex, setAvatarIndex] = useState(0);
-  const lobbyIdRef = useRef('');
+  const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
+
+
+  const handleGenerate = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
+      const salon = await response.json();
+      setLobbyId(salon.code);
+    } catch (err) {
+      console.warn("Erreur génération code :", err.message);
+    }
+  };
+
+  const createLobby = async () => {
+    setLoading(true);
+    try {
+      let roomCode = lobbyId;
+      if (!roomCode) {
+        const response = await fetch(`${API_URL}/api/salons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const salon = await response.json();
+        roomCode = salon.code;
+        setLobbyId(roomCode);
+      }
+
+      const finalPseudo = pseudo.trim() || `Hôte-${roomCode.slice(0, 3)}`;
+
+      const salonRes = await fetch(`${API_URL}/api/salons/${roomCode}`);
+      const salonData = await salonRes.json();
+      const userRes = await fetch(`${API_URL}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salon_id: salonData.id,
+          role: 'host',
+          pseudo: finalPseudo,
+          avatarIndex
+        }),
+      });
+
+      const user = await userRes.json();
+
+      const socket = getSocket();
+      socketRef.current = socket;
+
+      joinRoom(roomCode, finalPseudo, avatarIndex, user.id);
+
+      navigation.navigate('Lobby', {
+        lobbyId: roomCode,
+        role: 'host',
+        pseudo: finalPseudo,
+        avatarIndex,
+      });
+
+    } catch (err) {
+      console.warn("Erreur création salon :", err.message);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
-
-    const createLobby = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
-        const { code } = await response.json();
-        setLobbyId(code);
-        lobbyIdRef.current = code;
-        joinRoom(code);
-      } catch (err) {
-        const generated = LobbyModel.generateId();
-        setLobbyId(generated);
-        lobbyIdRef.current = generated;
-        joinRoom(generated);
-      }
-    };
-
-    // createLobby();
 
     socket.on('connect_error', (err) => {
       console.warn('Erreur connexion socket :', err.message);
@@ -47,6 +90,7 @@ export default function CreateLobbyController({ navigation }) {
     };
   }, []);
 
+
   const handleShare = async () => {
     try {
       await Share.share({
@@ -55,49 +99,6 @@ export default function CreateLobbyController({ navigation }) {
     } catch (err) {
       console.warn('Share failed:', err);
     }
-  };
-
-  const handleGenerate = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
-        const { code } = await response.json();
-        setLobbyId(code);
-        lobbyIdRef.current = code;
-        joinRoom(code, pseudo, avatarIndex);
-      } catch (err) {
-        const generated = LobbyModel.generateId();
-        setLobbyId(generated);
-        lobbyIdRef.current = generated;
-        joinRoom(generated, pseudo, avatarIndex);
-      }
-    };
-
-  const handleStart = async () => {
-    const finalPseudo = pseudo.trim() || `Hôte-${lobbyId.slice(0, 3)}`;
-    await saveSession({ lobbyId, role: 'host', pseudo: finalPseudo });
-    try {
-      const salonRes = await fetch(`${API_URL}/api/salons/${lobbyId}`);
-      const salonData = await salonRes.json();
-
-      await fetch(`${API_URL}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          salon_id: salonData.id,
-          role: 'host',
-          pseudo: finalPseudo,
-          avatarIndex
-        }),
-      });
-    } catch (err) {
-      console.warn('Erreur création utilisateur :', err.message);
-    }
-    navigation.navigate('Lobby', {
-      lobbyId,
-      role: 'host',
-      pseudo: finalPseudo,
-      avatarIndex,
-    });
   };
 
   const handleBack = () => {
@@ -110,11 +111,12 @@ export default function CreateLobbyController({ navigation }) {
       lobbyId={lobbyId}
       onBack={handleBack}
       onShare={handleShare}
-      onStart={handleStart}
+      onStart={createLobby}
       pseudo={pseudo}
       onChangePseudo={setPseudo}
       avatarIndex={avatarIndex}
       onSelectAvatar={setAvatarIndex}
+      loading={loading}
       onGenerate={handleGenerate}
     />
   );

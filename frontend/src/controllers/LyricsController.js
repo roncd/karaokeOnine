@@ -5,9 +5,18 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Audio } from 'expo-av';
+import { Platform } from 'react-native';
 import LyricsView from '../views/LyricsView';
-import { getSocket, joinRoom } from '../services/socketService';
+import { getSocket } from '../services/socketService';
 import { API_URL } from '../config';
+
+if (Platform.OS === 'web' && !global.SyntheticPlatformEmitter) {
+  global.SyntheticPlatformEmitter = {
+    emit: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+  };
+}
 
 // ─── Parser .lrc ─────────────────────────────────────────────────────────────
 function parseLrc(lrcContent) {
@@ -20,9 +29,9 @@ function parseLrc(lrcContent) {
     if (!match) continue;
     const minutes = parseInt(match[1]);
     const seconds = parseInt(match[2]);
-    const ms      = parseInt(match[3].padEnd(3, '0'));
-    const timeMs  = (minutes * 60 + seconds) * 1000 + ms;
-    const text    = line.replace(timeRegex, '').trim();
+    const ms = parseInt(match[3].padEnd(3, '0'));
+    const timeMs = (minutes * 60 + seconds) * 1000 + ms;
+    const text = line.replace(timeRegex, '').trim();
     if (text) result.push({ timeMs, text });
   }
 
@@ -30,36 +39,47 @@ function parseLrc(lrcContent) {
 }
 
 export default function LyricsController({ route, navigation }) {
-  const { lobbyId, role, currentSong, singerId, songId } = route.params;
+  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam } = route.params;
 
-  const socketRef    = useRef(null);
-  const soundRef     = useRef(null);
-  const intervalRef  = useRef(null);
+  const socketRef = useRef(null);
+  const soundRef = useRef(null);
+  const intervalRef = useRef(null);
   const hasNavigated = useRef(false);
-  const lyricsRef    = useRef([]);
+  const lyricsRef = useRef([]);
 
-  const [lyrics, setLyrics]                     = useState([]);
+  const [lyrics, setLyrics] = useState([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [reactions, setReactions]               = useState([]);
-  const [queue, setQueue]                       = useState([]);
-  const [participants, setParticipants]         = useState([]);
-  const [scrollRef, setScrollRef]               = useState(null);
+  const [reactions, setReactions] = useState([]);
+  const [queue, setQueue] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [scrollRef, setScrollRef] = useState(null);
+  const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (avatarIndexParam !== undefined) {
+      avatarIndexRef.current = avatarIndexParam;
+    }
+  }, [avatarIndexParam]);
 
   // ─── Charger paroles + audio ──────────────────────────────────────────────
   useEffect(() => {
+    let isMounted = true;
+
     const loadSong = async () => {
       try {
         // Charger les paroles
-        const lyricsRes  = await fetch(`${API_URL}/songs/${songId}/lyrics`);
+        const lyricsRes = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
         const lyricsData = await lyricsRes.json();
-        const parsed     = parseLrc(lyricsData.lyrics);
+        const parsed = parseLrc(lyricsData.lyrics);
+       if (!isMounted) return;
         setLyrics(parsed);
         lyricsRef.current = parsed;
 
         // Charger l'audio
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-        const { sound } = await Audio.loadAsync(
-          { uri: `${API_URL}/songs/${songId}/audio` },
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: `${API_URL}/api/songs/${songId}/audio` },
           { shouldPlay: true }
         );
         soundRef.current = sound;
@@ -96,6 +116,7 @@ export default function LyricsController({ route, navigation }) {
     if (songId) loadSong();
 
     return () => {
+      isMounted = false;
       clearInterval(intervalRef.current);
       soundRef.current?.unloadAsync();
     };
@@ -121,10 +142,6 @@ export default function LyricsController({ route, navigation }) {
     const socket = getSocket();
     socketRef.current = socket;
 
-    joinRoom(lobbyId);
-
-    socket.on('connect', () => joinRoom(lobbyId));
-
     socket.on('queue-updated', (updatedQueue) => setQueue(updatedQueue));
 
     socket.on('reaction-received', ({ type, userId }) => {
@@ -135,15 +152,24 @@ export default function LyricsController({ route, navigation }) {
       }, 2000);
     });
 
-    socket.on('user-joined', ({ userId }) => {
-      setParticipants((prev) => [...prev, userId]);
+    socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
+      setParticipants((prev) => [...prev, { id: userId, pseudo, avatarIndex }]);
+    });
+
+    socket.on('turn-skipped', () => {
+      navigation.replace('Lobby', { lobbyId, role });
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Erreur socket lyrics :', err.message);
     });
 
     return () => {
-      socket.off('connect');
       socket.off('queue-updated');
       socket.off('reaction-received');
       socket.off('user-joined');
+      socket.off('turn-skipped');
+      socket.off('connect_error');
     };
   }, [lobbyId]);
 
