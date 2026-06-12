@@ -16,11 +16,22 @@ import {
   Image,
 } from 'react-native';
 
-// const YELLOW = '#F5E642';
-// const BG     = '#0B3D5E';
 import styles from './viewStyles/VoteStarView.styles';
 // ─── Avatar cliquable ─────────────────────────────────────────────────────────
+const AVATARS = [
+  require('../../assets/avatars/avatar1.png'),
+  require('../../assets/avatars/avatar2.png'),
+  require('../../assets/avatars/avatar3.png'),
+  require('../../assets/avatars/avatar4.png'),
+  require('../../assets/avatars/avatar5.png'),
+  require('../../assets/avatars/avatar6.png'),
+  require('../../assets/avatars/avatar7.png'),
+  require('../../assets/avatars/avatar8.png'),
+];
+
 function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted, onSelect }) {
+  const avatar = AVATARS[avatarIndex % AVATARS.length] ?? AVATARS[0];
+  
   return (
     <TouchableOpacity
       style={styles.avatarWrapper}
@@ -28,11 +39,15 @@ function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted,
       disabled={hasVoted}
       activeOpacity={0.7}
     >
-      <View style={[styles.avatarCircle, isSelected && styles.avatarCircleSelected]} />
-      {isHost && <Image
-        source={require('../../assets/icon/icon_hote_karaoke.png')}
-        style={styles.hostIcon}
-      />}
+      <View style={[styles.avatarCircle, isSelected && styles.avatarCircleSelected]}>
+        <Image source={avatar} style={styles.avatarImage} />
+      </View>
+      {isHost && (
+        <Image
+          source={require('../../assets/icon/icon_hote_karaoke.png')}
+          style={styles.hostIcon}
+        />
+      )}
       <Text style={{ color: '#fff', fontSize: 11, marginTop: 4 }}>{pseudo}</Text>
     </TouchableOpacity>
   );
@@ -52,7 +67,7 @@ function WinnerScreen({ winner, onContinue }) {
 }
 // ─── VoteStarView ─────────────────────────────────────────────────────────────
 export default function VoteStarView({
-  participants,
+  participants = [],
   selectedId,
   winner,
   hasVoted,
@@ -83,12 +98,12 @@ export default function VoteStarView({
             <View style={styles.grid}>
               {participants.map((p) => (
                 <AvatarItem
-                  key={p.id}
-                  userId={p.id}
+                  key={p.userId || p.id}
+                  userId={p.userId || p.id}
                   pseudo={p.pseudo}
                   avatarIndex={p.avatarIndex}
-                  isHost={p.id === hostId}
-                  isSelected={selectedId === p.id}
+                  isHost={(p.userId || p.id) === hostId}
+                  isSelected={selectedId === (p.userId || p.id)}
                   hasVoted={hasVoted}
                   onSelect={onSelect}
                 />

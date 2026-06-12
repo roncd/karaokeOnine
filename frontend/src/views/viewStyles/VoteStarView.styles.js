@@ -36,7 +36,11 @@ export default StyleSheet.create({
       default: {},
     }),
   },
-
+    avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32,
+  },
   // Grille
   grid: {
     flexDirection: 'row',
