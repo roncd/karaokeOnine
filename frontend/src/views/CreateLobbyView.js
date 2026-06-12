@@ -14,18 +14,6 @@ import styles from './viewStyles/CreateLobbyView.styles';
 import AvatarPicker from '../components/AvatarPicker';
 
 export default function CreateLobbyView({ lobbyId, onBack, onShare, onStart, pseudo, onChangePseudo, avatarIndex, onSelectAvatar, onGenerate }) {
-  const handleCopy = async () => {
-    try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(lobbyId);
-      } else {
-        // fallback mobile
-        Clipboard.setString(lobbyId);
-      }
-    } catch (err) {
-      console.warn("Erreur copie :", err);
-    }
-  };
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
