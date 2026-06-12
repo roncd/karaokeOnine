@@ -36,7 +36,7 @@ export default function CreateLobbyController({ navigation }) {
       }
     };
 
-    createLobby();
+    // createLobby();
 
     socket.on('connect_error', (err) => {
       console.warn('Erreur connexion socket :', err.message);
@@ -56,6 +56,21 @@ export default function CreateLobbyController({ navigation }) {
       console.warn('Share failed:', err);
     }
   };
+
+  const handleGenerate = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/salons`, { method: 'POST' });
+        const { code } = await response.json();
+        setLobbyId(code);
+        lobbyIdRef.current = code;
+        joinRoom(code, pseudo, avatarIndex);
+      } catch (err) {
+        const generated = LobbyModel.generateId();
+        setLobbyId(generated);
+        lobbyIdRef.current = generated;
+        joinRoom(generated, pseudo, avatarIndex);
+      }
+    };
 
   const handleStart = async () => {
     const finalPseudo = pseudo.trim() || `Hôte-${lobbyId.slice(0, 3)}`;
@@ -100,6 +115,7 @@ export default function CreateLobbyController({ navigation }) {
       onChangePseudo={setPseudo}
       avatarIndex={avatarIndex}
       onSelectAvatar={setAvatarIndex}
+      onGenerate={handleGenerate}
     />
   );
 }

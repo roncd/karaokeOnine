@@ -39,7 +39,7 @@ export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, err
             {/* Titre */}
             <View style={styles.titleBlock}>
               <Text style={styles.title}>Rejoindre un salon</Text>
-              <Text style={styles.subtitle}>Entrez un code d'accès à 6 chiffres</Text>
+              <Text style={styles.subtitle}>Entrez un code d'accès à 6 caractères</Text>
             </View>
 
             {/* Input */}
