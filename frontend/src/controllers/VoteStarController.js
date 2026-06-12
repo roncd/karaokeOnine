@@ -30,8 +30,9 @@ export default function VoteStarController({ route, navigation }) {
       socket.emit('get-participants', { roomCode: lobbyId });
     });
 
-    socket.on('participants-list', ({ participants }) => {
-      setParticipants(participants);
+    socket.on('participants-list', (data) => {
+      const list = Array.isArray(data) ? data : data?.participants ?? [];
+      setParticipants(list);
     });
 
     socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
