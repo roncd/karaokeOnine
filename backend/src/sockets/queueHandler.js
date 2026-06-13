@@ -44,6 +44,30 @@ function registerQueueHandlers(io, socket) {
     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
   });
 
+//   socket.on('song-finished', ({ roomCode }) => {
+//   if (roomQueues[roomCode]?.length > 0) {
+//     roomQueues[roomCode].shift();
+//     if (roomSongIds[roomCode]?.length > 0) roomSongIds[roomCode].shift();
+//     if (roomSingers[roomCode]?.length > 0) roomSingers[roomCode].shift();
+//     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
+//   }
+// });
+
+  socket.on('song-finished', ({ roomCode }) => {
+     console.log('song-finished reçu pour room:', roomCode);
+    if (roomQueues[roomCode]?.length > 0) {
+      roomQueues[roomCode].shift();
+      if (roomSongIds[roomCode]?.length > 0) roomSongIds[roomCode].shift();
+      if (roomSingers[roomCode]?.length > 0) roomSingers[roomCode].shift();
+    }
+    // Émettre à TOUT le monde la file mise à jour
+    io.to(roomCode).emit('queue-updated', roomQueues[roomCode] || []);
+    // Émettre seulement à celui qui a fini
+    socket.emit('song-finished-ack', { 
+      remaining: roomQueues[roomCode]?.length ?? 0 
+    });
+  });
+  
   socket.on('remove-song', ({ roomCode, index }) => {
     if (!roomQueues[roomCode]) return;
     roomQueues[roomCode].splice(index, 1);
