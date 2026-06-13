@@ -2,9 +2,8 @@ const { roomQueues, roomSongIds, roomSingers } = require('../services/roomState'
 const pool = require('../db/db');
 
 function registerQueueHandlers(io, socket) {
-
   socket.on("add-song", async (data) => {
-    const { roomCode, songTitle, pseudo, avatarIndex } = data;
+    const { roomCode, songTitle, pseudo, avatarIndex, userId } = data;
 
     // Chercher la chanson en BDD
     const result = await pool.query(
@@ -23,35 +22,31 @@ function registerQueueHandlers(io, socket) {
     if (!roomSongIds[roomCode]) roomSongIds[roomCode] = [];
     if (!roomSingers[roomCode]) roomSingers[roomCode] = [];
 
+    // Ajouter la chanson dans la file
     roomQueues[roomCode].push({
       id: song.id,
       titre: song.titre,
       artiste: song.artiste,
       genre: song.genre,
       duree: song.duree,
-      pseudo: pseudo || 'Anonyme',
-      avatarIndex: avatarIndex || 0
+      pseudo,
+      avatarIndex
     });
+
+    // Ajouter l'id de la chanson
     roomSongIds[roomCode].push(song.id);
+
+    // Ajouter le chanteur associé à cette chanson
     roomSingers[roomCode].push({
-      socketId: socket.id,
-      pseudo: pseudo || 'Anonyme',
-      avatarIndex: avatarIndex || 0
+      userId,        // ✔ ID BDD
+      pseudo,
+      avatarIndex
     });
 
     console.log(`Ajout chanson ${song.titre} dans ${roomCode}`);
 
     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
   });
-
-//   socket.on('song-finished', ({ roomCode }) => {
-//   if (roomQueues[roomCode]?.length > 0) {
-//     roomQueues[roomCode].shift();
-//     if (roomSongIds[roomCode]?.length > 0) roomSongIds[roomCode].shift();
-//     if (roomSingers[roomCode]?.length > 0) roomSingers[roomCode].shift();
-//     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
-//   }
-// });
 
   socket.on('song-finished', ({ roomCode }) => {
      console.log('song-finished reçu pour room:', roomCode);
@@ -78,14 +73,17 @@ function registerQueueHandlers(io, socket) {
 
   socket.on('move-song', ({ roomCode, from, to }) => {
     if (!roomQueues[roomCode]) return;
+
     const moveItem = (arr) => {
       if (!arr) return;
       const [item] = arr.splice(from, 1);
       arr.splice(to, 0, item);
     };
+
     moveItem(roomQueues[roomCode]);
     moveItem(roomSongIds[roomCode]);
     moveItem(roomSingers[roomCode]);
+
     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
   });
 }

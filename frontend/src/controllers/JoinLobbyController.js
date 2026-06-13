@@ -52,7 +52,7 @@ export default function JoinLobbyController({ navigation }) {
 
       const user = await userRes.json();
 
-      joinRoom(roomCode, pseudo, avatarIndex, user.id);
+      joinRoom(roomCode, finalPseudo, avatarIndex, user.id);
 
       // Sauvegarder la session localement
       await saveSession({ lobbyId: roomCode, role: 'guest' });
@@ -62,6 +62,7 @@ export default function JoinLobbyController({ navigation }) {
         role: 'guest',
         pseudo: finalPseudo,
         avatarIndex,
+        userId: user.id,
       });
 
     } catch (err) {

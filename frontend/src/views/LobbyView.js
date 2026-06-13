@@ -112,7 +112,7 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
 // }
 
 // ─── Vue HÔTE : file d'attente ───────────────────────────────────────────────
-function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown }) {
+function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown, micEnabled, onToggleMic }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [songInput, setSongInput] = useState('');
   const [songs, setSongs] = useState([]);
@@ -204,6 +204,10 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
         </TouchableOpacity>
       )}
 
+      <TouchableOpacity onPress={onToggleMic}>
+        <Text>{micEnabled ? "🎤 Micro ON" : "🔇 Micro OFF"}</Text>
+      </TouchableOpacity>
+
       {/* Modal ajout chanson */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -272,8 +276,8 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 // ─── Vue PARTICIPANT : catalogue ─────────────────────────────────────────────
 const GENRES = [
   { label: 'Pop', emoji: '🎵' },
-  { label: 'Rock', emoji: '🎸' },
-  { label: 'Rap', emoji: '🎤' },
+//  { label: 'Rock', emoji: '🎸' },
+  { label: 'Hip-Hop', emoji: '🎤' },
   { label: 'R&B', emoji: '🎶' },
   { label: 'Soul', emoji: '🎼' },
   { label: 'Funk', emoji: '🕺' },
@@ -283,7 +287,7 @@ const GENRES = [
   //emoji a retirer
 ];
 
-function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
+function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic }) {
   const [songs, setSongs] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -385,6 +389,10 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong }) {
         ))}
       </View>
 
+      <TouchableOpacity onPress={onToggleMic}>
+        <Text>{micEnabled ? "🎤 Micro ON" : "🔇 Micro OFF"}</Text>
+      </TouchableOpacity>
+
       {/* Modal liste de chansons */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -464,6 +472,8 @@ export default function LobbyView({
   onDeleteSong,
   onMoveUp,
   onMoveDown,
+  micEnabled,
+  onToggleMic,
 }) {
   const isHost = role === 'host';
 

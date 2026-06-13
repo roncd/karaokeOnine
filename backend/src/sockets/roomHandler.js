@@ -1,10 +1,12 @@
-const { roomParticipants } = require('../services/roomState');
-const { socketToUserId }   = require('./userMap');
+const { socketToUserId } = require('./userMap');
+const { roomParticipants, roomSingers, roomQueues, roomSongIds, roomVotes, roomSkipVotes } = require('../services/roomState');
 
 function registerRoomHandlers(io, socket) {
 
   socket.on("join-room", ({ roomCode, pseudo, avatarIndex, userId, isHost }) => {
-    if (userId) socketToUserId[socket.id] = userId;
+
+    socketToUserId[socket.id] = userId;
+    socket.roomCode = roomCode;
 
     const MAX_PLAYERS = 9;
     const room = io.sockets.adapter.rooms.get(roomCode);
@@ -12,26 +14,23 @@ function registerRoomHandlers(io, socket) {
       socket.emit('room-full');
       return;
     }
+
     socket.join(roomCode);
+    console.log(`${socket.id} (${pseudo}) a rejoint la room ${roomCode}`);
 
     if (!roomParticipants[roomCode]) roomParticipants[roomCode] = [];
-    const existing = roomParticipants[roomCode].findIndex(p => p.userId === socket.id);
-    const participant = {
-      userId: socket.id,
-      pseudo: pseudo || 'Anonyme',
-      avatarIndex: avatarIndex ?? 0,
-      isHost: !!isHost,
-    };
+
+    const existing = roomParticipants[roomCode].findIndex(p => p.id === userId);
+    const participant = { id: userId, pseudo, avatarIndex };
+
     if (existing >= 0) {
       roomParticipants[roomCode][existing] = participant;
     } else {
       roomParticipants[roomCode].push(participant);
     }
 
-    console.log(`${socket.id} (${pseudo || 'Anonyme'}) a rejoint la room ${roomCode}`);
-
     io.to(roomCode).emit("user-joined", {
-      userId: socket.id,
+      userId,
       pseudo,
       avatarIndex,
       isHost: !!isHost,
@@ -44,19 +43,21 @@ function registerRoomHandlers(io, socket) {
   });
 
   socket.on('get-queue', ({ roomCode }) => {
-    const { roomQueues } = require('../services/roomState');
     const queue = roomQueues[roomCode] || [];
     socket.emit('queue-updated', queue);
   });
 
   socket.on("send-reaction", ({ roomCode, type }) => {
-    io.to(roomCode).emit("reaction-received", { type, userId: socket.id });
+    const userId = socketToUserId[socket.id];
+    io.to(roomCode).emit("reaction-received", {
+      type,
+      userId,
+    });
   });
 
   socket.on('vote-skip', ({ roomCode }) => {
     if (!roomParticipants[roomCode]) return;
     const totalParticipants = roomParticipants[roomCode].length;
-    const { roomSkipVotes } = require('../services/roomState');
     if (!roomSkipVotes[roomCode]) roomSkipVotes[roomCode] = new Set();
     roomSkipVotes[roomCode].add(socket.id);
     const totalVotes = roomSkipVotes[roomCode].size;
@@ -66,20 +67,35 @@ function registerRoomHandlers(io, socket) {
     }
   });
 
-  socket.on('disconnect', () => {
-    delete socketToUserId[socket.id];
-  });
+  socket.on("disconnect", () => {
+    const userId = socketToUserId[socket.id];
+    const roomCode = socket.roomCode;
 
-  socket.on('disconnecting', () => {
-    for (const roomCode of socket.rooms) {
-      if (roomCode === socket.id) continue;
+    if (roomCode) {
       if (roomParticipants[roomCode]) {
         roomParticipants[roomCode] = roomParticipants[roomCode].filter(
-          p => p.userId !== socket.id
+          p => p.id !== userId
         );
       }
-      socket.to(roomCode).emit('user-left', { userId: socket.id });
+
+      if (roomSingers[roomCode]) {
+        roomSingers[roomCode] = roomSingers[roomCode].filter(
+          s => s.userId !== userId
+        );
+      }
+
+      const stillConnected = roomParticipants[roomCode]?.length || 0;
+      if (stillConnected === 0) {
+        delete roomParticipants[roomCode];
+        delete roomQueues[roomCode];
+        delete roomSongIds[roomCode];
+        delete roomSingers[roomCode];
+        delete roomVotes[roomCode];
+        delete roomSkipVotes[roomCode];
+      }
     }
+
+    delete socketToUserId[socket.id];
   });
 }
 
