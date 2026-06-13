@@ -40,7 +40,15 @@ module.exports = { httpServer, io };
 
 // Démarrer le serveur
 if (require.main === module) {
-  httpServer.listen(PORT, () => {
-    console.log(`Le serveur a démarré sur le port: ${PORT}`);
-  });
+  const { runMigrations } = require('./db/migrate');
+
+  runMigrations()
+    .catch((err) => {
+      console.warn('Migration BDD (non bloquante):', err.message);
+    })
+    .finally(() => {
+      httpServer.listen(PORT, () => {
+        console.log(`Le serveur a démarré sur le port: ${PORT}`);
+      });
+    });
 }

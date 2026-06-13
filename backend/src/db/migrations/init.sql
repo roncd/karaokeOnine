@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS song (
     artiste VARCHAR(100) NOT NULL,
     genre VARCHAR(50) NOT NULL,
     duree INTEGER NOT NULL,
-    annee INTEGER NOT NULL
+    annee INTEGER NOT NULL,
+    audio_path VARCHAR(255),
+    lyrics_path VARCHAR(255)
 );
 
 -- Table FILE D'ATTENTE

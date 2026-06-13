@@ -55,7 +55,13 @@ export default function JoinLobbyController({ navigation }) {
       joinRoom(roomCode, finalPseudo, avatarIndex, user.id);
 
       // Sauvegarder la session localement
-      await saveSession({ lobbyId: roomCode, role: 'guest' });
+      await saveSession({
+        lobbyId: roomCode,
+        role: 'guest',
+        pseudo: finalPseudo,
+        avatarIndex,
+        userId: user.id,
+      });
 
       navigation.navigate('Lobby', {
         lobbyId: roomCode,

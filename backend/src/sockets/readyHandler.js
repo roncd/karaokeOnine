@@ -7,6 +7,7 @@ const pool = require('../db/db');
 const { socketToUserId } = require('./userMap');
 
 const roomTimers = {};
+const roomCurrentSingers = {};
 const COUNTDOWN_SECONDS = 10;
 
 function registerReadyHandlers(io, socket) {
@@ -29,6 +30,8 @@ function registerReadyHandlers(io, socket) {
     const currentSong = roomQueues[roomCode]?.[0] ?? null;
     const songId = roomSongIds[roomCode]?.[0] ?? null;
     const singerId = singer.id;
+    roomCurrentSingers[roomCode] = singerId;
+
     // Notifier tout le monde que le compte à rebours commence
     io.to(roomCode).emit('singer-selected', {
       singerId,
@@ -41,12 +44,15 @@ function registerReadyHandlers(io, socket) {
       currentSong: currentSong?.titre ?? null,
       songId,
       singerId,
+      singerPseudo: singer.pseudo,
+      singerAvatarIndex: singer.avatarIndex,
     });
 
     console.log(`Compte à rebours démarré dans ${roomCode} pour ${socket.id}`);
 
     roomTimers[roomCode] = setTimeout(() => {
       delete roomTimers[roomCode];
+      delete roomCurrentSingers[roomCode];
       console.log(`Temps écoulé dans ${roomCode} — tour skippé automatiquement`);
 
       let skippedSong = null;
@@ -76,24 +82,37 @@ function registerReadyHandlers(io, socket) {
   });
 
   socket.on('player-ready', async ({ roomCode }) => {
-    const userId = socketToUserId[socket.id]; FileSystemFileEntry
+    const userId = socketToUserId[socket.id];
+    if (!userId) {
+      console.warn('player-ready ignoré : utilisateur inconnu pour', socket.id);
+      return;
+    }
+
+    const expectedSingerId = roomCurrentSingers[roomCode];
+    if (expectedSingerId != null && String(expectedSingerId) !== String(userId)) {
+      console.warn(`player-ready ignoré : ${userId} n'est pas le chanteur (${expectedSingerId})`);
+      return;
+    }
+
     if (roomTimers[roomCode]) {
       clearTimeout(roomTimers[roomCode]);
       delete roomTimers[roomCode];
     }
 
-    const currentSong = roomQueues[roomCode]?.[0] ?? null;
-    const songId = roomSongIds[roomCode]?.[0] ?? null;
+    delete roomCurrentSingers[roomCode];
+
+    const queueItem = roomQueues[roomCode]?.[0] ?? null;
+    const songId = roomSongIds[roomCode]?.[0] ?? queueItem?.id ?? null;
+    const currentSongTitle = queueItem?.titre ?? null;
 
     // Persistance BDD (non bloquante)
     if (songId) {
       try {
-        const userId = socketToUserId[socket.id];
         const salonRes = await pool.query(
           `SELECT id FROM salon WHERE code = $1`,
           [roomCode]
         );
-        if (salonRes.rows.length > 0 && userId) {
+        if (salonRes.rows.length > 0) {
           const salonId = salonRes.rows[0].id;
           await pool.query(
             `INSERT INTO queue (salon_id, user_id, song_id, position, status)
@@ -109,7 +128,7 @@ function registerReadyHandlers(io, socket) {
 
     io.to(roomCode).emit('singer-ready', {
       singerId: userId,
-      currentSong,
+      currentSong: currentSongTitle,
       songId,
     });
   });

@@ -530,6 +530,8 @@ export default function LobbyView({
               onDeleteSong={onDeleteSong}
               onMoveUp={onMoveUp}
               onMoveDown={onMoveDown}
+              micEnabled={micEnabled}
+              onToggleMic={onToggleMic}
               topSongs={topSongs}
               topSongsLoading={topSongsLoading}
             />
@@ -540,6 +542,8 @@ export default function LobbyView({
               onVoteSkip={onVoteSkip}
               onAddSong={onAddSong}
               onStartSong={onStartSong}
+              micEnabled={micEnabled}
+              onToggleMic={onToggleMic}
               topSongs={topSongs}
               topSongsLoading={topSongsLoading}
             />
