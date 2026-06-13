@@ -8,6 +8,7 @@ const songRoutes = require('./routes/song');
 const queueRoutes = require('./routes/queue');
 const voteSkipRoutes = require('./routes/vote-skip');
 const tokenRoutes = require('./routes/token');
+const statsRoutes = require('./routes/stats');
 
 const app = express();
 app.use(cors());
@@ -25,5 +26,6 @@ app.use('/api/songs', songRoutes);
 app.use('/api/queues', queueRoutes);
 app.use('/api/vote-skip', voteSkipRoutes);
 app.use('/api/token', tokenRoutes);
+app.use('/api/stats', statsRoutes);
 
 module.exports = app;
