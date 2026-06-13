@@ -462,9 +462,8 @@ export default function LobbyView({
   isConnected,
   queue,
   skipVotes,
-  skippedSong,
   userCount,
-  toastMessage,
+  toast,
   onAddSong,
   onVoteSkip,
   onLeave,
@@ -494,11 +493,6 @@ export default function LobbyView({
           </TouchableOpacity>
         </View>
 
-        {/* Toast chanson skippée */}
-        {skippedSong && (
-          <Toast message={`"${skippedSong}" passé`} type="success" />
-        )}
-
         {/* Contenu selon rôle */}
         <View style={styles.content}>
           {isHost ? (
@@ -525,7 +519,7 @@ export default function LobbyView({
           )}
         </View>
       </SafeAreaView>
-      <Toast message={toastMessage} type="error" />
+      {toast ? <Toast {...toast} /> : null}
     </>
   );
 }

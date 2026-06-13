@@ -45,6 +45,7 @@ function registerQueueHandlers(io, socket) {
 
     console.log(`Ajout chanson ${song.titre} dans ${roomCode}`);
 
+    socket.emit('song-added', { titre: song.titre });
     io.to(roomCode).emit('queue-updated', roomQueues[roomCode]);
   });
 

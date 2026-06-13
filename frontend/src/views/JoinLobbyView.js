@@ -101,7 +101,7 @@ export default function JoinLobbyView({ inputId, onChangeId, onJoin, onBack, err
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-      <Toast message={error === 'full' ? 'Veuillez essayer un autre code.' : ''} type="full" />
+      {error === 'full' ? <Toast type="full" /> : null}
     </>
   );
 }

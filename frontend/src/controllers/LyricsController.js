@@ -7,9 +7,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import LyricsView from '../views/LyricsView';
+import Toast from '../components/Toast';
 import { getSocket } from '../services/socketService';
 import { API_URL } from '../config';
 import { enableMicrophone, disableMicrophone } from '../services/livekitService';
+import { useToast } from '../hooks/useToast';
 
 if (Platform.OS === 'web' && !global.SyntheticPlatformEmitter) {
   global.SyntheticPlatformEmitter = {
@@ -58,6 +60,7 @@ export default function LyricsController({ route, navigation }) {
   const [scrollRef, setScrollRef] = useState(null);
   const [skipVotes, setSkipVotes] = useState(new Set());
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
+  const { toast, showToast } = useToast();
 
   useEffect(() => {
     if (avatarIndexParam !== undefined) {
@@ -230,6 +233,7 @@ export default function LyricsController({ route, navigation }) {
 
   const handleSkipVote = () => {
     socketRef.current?.emit('vote-skip', { roomCode: lobbyId });
+    showToast('skipVote');
   };
 
   const handleSkipSong = async () => {
@@ -252,24 +256,27 @@ export default function LyricsController({ route, navigation }) {
   };
 
   return (
-    <LyricsView
-      lyrics={lyrics}
-      currentLineIndex={currentLineIndex}
-      currentSong={currentSong}
-      queue={queue}
-      reactions={reactions}
-      participants={participants}
-      singerSocketId={singerSocketId}
-      role={role}
-      skipVotes={skipVotes}
-      totalParticipants={participants.length}
-      skipThreshold={SKIP_THRESHOLD}
-      selectedSongIndex={selectedSongIndex}
-      onReaction={handleReaction}
-      onSkipVote={handleSkipVote}
-      onOpenQueue={handleOpenQueue}
-      onScrollRef={setScrollRef}
-      onSelectSong={handleSelectSong}
-    />
+    <>
+      <LyricsView
+        lyrics={lyrics}
+        currentLineIndex={currentLineIndex}
+        currentSong={currentSong}
+        queue={queue}
+        reactions={reactions}
+        participants={participants}
+        singerSocketId={singerSocketId}
+        role={role}
+        skipVotes={skipVotes}
+        totalParticipants={participants.length}
+        skipThreshold={SKIP_THRESHOLD}
+        selectedSongIndex={selectedSongIndex}
+        onReaction={handleReaction}
+        onSkipVote={handleSkipVote}
+        onOpenQueue={handleOpenQueue}
+        onScrollRef={setScrollRef}
+        onSelectSong={handleSelectSong}
+      />
+      {toast ? <Toast {...toast} /> : null}
+    </>
   );
 }

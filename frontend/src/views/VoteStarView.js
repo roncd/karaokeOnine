@@ -130,7 +130,7 @@ export default function VoteStarView({
           </View>
         )}
       </SafeAreaView>
-      <Toast message="Vote enregistré !" type="success" />
+      {hasVoted ? <Toast type="voteRecorded" /> : null}
     </>
   );
 }
