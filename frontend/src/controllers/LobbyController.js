@@ -8,9 +8,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import LobbyView from '../views/LobbyView';
 import { getSocket, disconnectSocket } from '../services/socketService';
 import { clearSession } from '../services/sessionService';
+import { connectToRoom, disconnectFromRoom, toggleMicrophone } from '../services/livekitService';
+import { enableMicrophone, disableMicrophone, getRoom } from '../services/livekitService';
 
 export default function LobbyController({ route, navigation }) {
-  const { lobbyId, role, pseudo, avatarIndex: avatarIndexParam } = route.params;
+  const { lobbyId, role, pseudo, avatarIndex: avatarIndexParam, userId } = route.params;
   const socketRef = useRef(null);
 
   const [isConnected, setIsConnected] = useState(false);
@@ -21,12 +23,37 @@ export default function LobbyController({ route, navigation }) {
   const [toastMessage, setToastMessage] = useState('');
   const [participants, setParticipants] = useState([]);
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+  const [micEnabled, setMicEnabled] = useState(true);
 
   useEffect(() => {
     if (avatarIndexParam !== undefined) {
       avatarIndexRef.current = avatarIndexParam;
     }
   }, [avatarIndexParam]);
+
+  useEffect(() => {
+    if (!userId) return;
+    connectToRoom(lobbyId, userId);
+    return () => disconnectFromRoom();
+  }, [lobbyId, userId]);
+
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    socket.on('singer-selected', ({ singerId }) => {
+      socket.on('singer-selected', async ({ singerId }) => {
+        await waitForLivekitReady();
+
+        if (singerId === userId) enableMicrophone();
+        else disableMicrophone();
+      });
+    });
+
+    return () => {
+      socket.off('singer-selected');
+    };
+  }, [userId]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -57,6 +84,7 @@ export default function LobbyController({ route, navigation }) {
         singerId,
         currentSong,
         songId,
+        userId,
       });
     });
 
@@ -134,6 +162,11 @@ export default function LobbyController({ route, navigation }) {
     navigation.navigate('Home');
   };
 
+  const handleToggleMic = async () => {
+    const newState = await toggleMicrophone();
+    setMicEnabled(newState);
+  };
+
   return (
     <LobbyView
       lobbyId={lobbyId}
@@ -151,6 +184,8 @@ export default function LobbyController({ route, navigation }) {
       onDeleteSong={handleDeleteSong}
       onMoveUp={handleMoveUp}
       onMoveDown={handleMoveDown}
+      micEnabled={micEnabled}
+      onToggleMic={handleToggleMic}
     />
   );
 }

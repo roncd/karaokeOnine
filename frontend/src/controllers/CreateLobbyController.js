@@ -63,12 +63,14 @@ export default function CreateLobbyController({ navigation }) {
       socketRef.current = socket;
 
       joinRoom(roomCode, finalPseudo, avatarIndex, user.id);
+      await saveSession({ lobbyId: roomCode, role: 'host', pseudo: finalPseudo, avatarIndex, userId: user.id });
 
       navigation.navigate('Lobby', {
         lobbyId: roomCode,
         role: 'host',
         pseudo: finalPseudo,
         avatarIndex,
+        userId: user.id,
       });
 
     } catch (err) {

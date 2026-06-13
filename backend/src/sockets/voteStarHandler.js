@@ -3,25 +3,26 @@
  * Gère le vote pour la star de la session
  */
 
-// Stocke les votes par room : { roomCode: { userId: votedFor } }
-const roomVotesStar = {};
+const { socketToUserId } = require('./userMap');
+const { roomParticipants } = require('../services/roomState');
 
-// Stocke les participants par room
-const roomParticipants = {};
+const roomVotesStar = {};
 
 function registerVoteStarHandlers(io, socket) {
 
   // Enregistrer le participant dans la room
-  socket.on('join-room', ({ roomCode, pseudo, avatarIndex }) => {
+  socket.on('join-room', ({ roomCode, pseudo, avatarIndex, userId }) => {
+
     if (!roomParticipants[roomCode]) {
       roomParticipants[roomCode] = [];
     }
-    const exists = roomParticipants[roomCode].some(p => p.id === socket.id);
+
+    const exists = roomParticipants[roomCode].some(p => p.id === userId);
     if (!exists) {
       roomParticipants[roomCode].push({
-        id: socket.id,
-        pseudo: pseudo,
-        avatarIndex: avatarIndex,
+        id: userId,   
+        pseudo,
+        avatarIndex,
       });
     }
   });
@@ -34,43 +35,38 @@ function registerVoteStarHandlers(io, socket) {
 
   // Recevoir un vote
   socket.on('vote-star', ({ roomCode, votedFor }) => {
+
+    const userId = socketToUserId[socket.id]; // ✔ ID BDD
+
     if (!roomVotesStar[roomCode]) {
       roomVotesStar[roomCode] = {};
     }
 
-    // Enregistrer le vote (un seul vote par personne)
-    roomVotesStar[roomCode][socket.id] = votedFor;
+    roomVotesStar[roomCode][userId] = votedFor; // ✔ ID BDD
 
-    console.log(`Vote star dans ${roomCode} : ${socket.id} vote pour ${votedFor}`);
+    console.log(`Vote star dans ${roomCode} : ${userId} vote pour ${votedFor}`);
 
     const totalParticipants = (roomParticipants[roomCode] || []).length;
     const totalVotes = Object.keys(roomVotesStar[roomCode]).length;
 
-    // Quand tout le monde a voté → calculer le gagnant
     if (totalVotes >= totalParticipants) {
       const votes = roomVotesStar[roomCode];
 
-      // Compter les votes par candidat
       const count = {};
       for (const votedFor of Object.values(votes)) {
         count[votedFor] = (count[votedFor] || 0) + 1;
       }
 
-      // Trouver le gagnant
       const winnerId = Object.entries(count).sort((a, b) => b[1] - a[1])[0][0];
-
-      console.log(`Star de la soirée dans ${roomCode} : ${winnerId} avec ${count[winnerId]} votes`);
 
       io.to(roomCode).emit('vote-result', {
         winnerId,
         votes: count[winnerId],
       });
 
-      // Nettoyer
       delete roomVotesStar[roomCode];
     }
   });
-
 }
 
 module.exports = registerVoteStarHandlers;
