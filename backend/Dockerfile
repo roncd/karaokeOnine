@@ -13,6 +13,10 @@ LABEL org.opencontainers.image.title="backend" \
 
 WORKDIR /app
 
+RUN apk update \
+  && apk upgrade --no-cache openssl libcrypto3 libssl3 \
+  && rm -rf /var/cache/apk/*
+
 ENV NODE_ENV=production \
   PORT=3000
 
