@@ -9,12 +9,13 @@ import { Platform } from 'react-native';
 import LyricsView from '../views/LyricsView';
 import { getSocket } from '../services/socketService';
 import { API_URL } from '../config';
+import { enableMicrophone, disableMicrophone } from '../services/livekitService';
 
 if (Platform.OS === 'web' && !global.SyntheticPlatformEmitter) {
   global.SyntheticPlatformEmitter = {
-    emit: () => {},
-    addListener: () => {},
-    removeListener: () => {},
+    emit: () => { },
+    addListener: () => { },
+    removeListener: () => { },
   };
 }
 
@@ -38,24 +39,24 @@ function parseLrc(lrcContent) {
 const SKIP_THRESHOLD = 0.5;
 
 export default function LyricsController({ route, navigation }) {
-  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam } = route.params;
+  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam, userId } = route.params;
 
   const singerSocketId = singerId?.socketId || singerId;
 
-  const socketRef      = useRef(null);
-  const soundRef       = useRef(null);
-  const intervalRef    = useRef(null);
-  const hasNavigated   = useRef(false);
-  const lyricsRef      = useRef([]);
+  const socketRef = useRef(null);
+  const soundRef = useRef(null);
+  const intervalRef = useRef(null);
+  const hasNavigated = useRef(false);
+  const lyricsRef = useRef([]);
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
 
-  const [lyrics, setLyrics]                       = useState([]);
-  const [currentLineIndex, setCurrentLineIndex]   = useState(0);
-  const [reactions, setReactions]                 = useState([]);
-  const [queue, setQueue]                         = useState([]);
-  const [participants, setParticipants]           = useState([]);
-  const [scrollRef, setScrollRef]                 = useState(null);
-  const [skipVotes, setSkipVotes]                 = useState(new Set());
+  const [lyrics, setLyrics] = useState([]);
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [reactions, setReactions] = useState([]);
+  const [queue, setQueue] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [scrollRef, setScrollRef] = useState(null);
+  const [skipVotes, setSkipVotes] = useState(new Set());
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
 
   useEffect(() => {
@@ -64,12 +65,21 @@ export default function LyricsController({ route, navigation }) {
     }
   }, [avatarIndexParam]);
 
+  useEffect(() => {
+    if (singerId === userId) {
+      enableMicrophone();
+    } else {
+      disableMicrophone();
+    }
+  }, []);
+
+
   // ─── Socket ───────────────────────────────────────────────────────────────
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
 
-    socket.emit('get-queue',        { roomCode: lobbyId });
+    socket.emit('get-queue', { roomCode: lobbyId });
     socket.emit('get-participants', { roomCode: lobbyId });
 
     socket.on('queue-updated', (updatedQueue) => setQueue(updatedQueue));
@@ -157,60 +167,40 @@ export default function LyricsController({ route, navigation }) {
         soundRef.current = sound;
 
         intervalRef.current = setInterval(async () => {
-  if (!soundRef.current) return;
-  const status = await soundRef.current.getStatusAsync();
-  if (!status.isLoaded) return;
+          if (!soundRef.current) return;
+          const status = await soundRef.current.getStatusAsync();
+          if (!status.isLoaded) return;
 
-  const positionMs = status.positionMillis;
-  const arr = lyricsRef.current;
-  let idx = 0;
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i].timeMs <= positionMs) idx = i;
-    else break;
-  }
-  setCurrentLineIndex(idx);
+          const positionMs = status.positionMillis;
+          const arr = lyricsRef.current;
+          let idx = 0;
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i].timeMs <= positionMs) idx = i;
+            else break;
+          }
+          setCurrentLineIndex(idx);  
 
-      // if (status.didJustFinish && !hasNavigated.current) {
-      //     hasNavigated.current = true;
-      //     clearInterval(intervalRef.current);
+          if (status.didJustFinish && !hasNavigated.current) {
+            hasNavigated.current = true;
+            clearInterval(intervalRef.current);
+            enableMicrophone();
 
-      //       // Retirer la chanson de la file
-      //       socketRef.current?.emit('song-finished', { roomCode: lobbyId });
+            const socket = socketRef.current;
 
-      //       // Attendre la mise à jour de la file
-      //       const socket = socketRef.current;
-      //     socket.once('queue-updated', (updatedQueue) => {
-      //       if (updatedQueue.length > 0) {
-      //         navigation.replace('Lobby', { lobbyId, role, pseudo, avatarIndex: avatarIndexRef.current });
-      //       } else {
-      //         navigation.replace('VoteStar', {
-      //           lobbyId, role, hostId: singerId,
-      //           pseudo, avatarIndex: avatarIndexRef.current,
-      //         });
-      //       }
-      //     });
-      //   }
+            socket.once('song-finished-ack', ({ remaining }) => {
+              if (remaining > 0) {
+                navigation.replace('Lobby', { lobbyId, role, pseudo, avatarIndex: avatarIndexRef.current });
+              } else {
+                navigation.replace('VoteStar', {
+                  lobbyId, role, hostId: singerId,
+                  pseudo, avatarIndex: avatarIndexRef.current,
+                });
+              }
+            });
 
-      if (status.didJustFinish && !hasNavigated.current) {
-          hasNavigated.current = true;
-          clearInterval(intervalRef.current);
-
-          const socket = socketRef.current;
-          
-          socket.once('song-finished-ack', ({ remaining }) => {
-            if (remaining > 0) {
-              navigation.replace('Lobby', { lobbyId, role, pseudo, avatarIndex: avatarIndexRef.current });
-            } else {
-              navigation.replace('VoteStar', {
-                lobbyId, role, hostId: singerId,
-                pseudo, avatarIndex: avatarIndexRef.current,
-              });
-            }
-          });
-
-          socket.emit('song-finished', { roomCode: lobbyId });
-        }
-      }, 200);
+            socket.emit('song-finished', { roomCode: lobbyId });
+          }
+        }, 200);
 
       } catch (err) {
         console.warn('Erreur chargement chanson :', err.message);

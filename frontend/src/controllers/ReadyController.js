@@ -7,11 +7,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReadyView from '../views/ReadyView';
 import { getSocket } from '../services/socketService';
+import { enableMicrophone, disableMicrophone, getRoom } from '../services/livekitService';
 
 const COUNTDOWN = 10;
 
 export default function ReadyController({ route, navigation }) {
-  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam } = route.params;
+  const { lobbyId, role, currentSong, singerId, songId, pseudo, avatarIndex: avatarIndexParam, userId } = route.params;
 
   const socketRef = useRef(null);
   const timerRef = useRef(null);
@@ -19,6 +20,26 @@ export default function ReadyController({ route, navigation }) {
   const [skipped, setSkipped] = useState(false);
   const [isSinger, setIsSinger] = useState(false);
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
+
+  useEffect(() => {
+    const room = getRoom();
+
+    if (!room) {
+      console.log("LiveKit pas encore prêt, on attend…");
+      const interval = setInterval(() => {
+        const r = getRoom();
+        if (r && r.state === "connected") {
+          clearInterval(interval);
+          if (singerId === userId) enableMicrophone();
+          else disableMicrophone();
+        }
+      }, 200);
+      return;
+    }
+
+    if (singerId === userId) enableMicrophone();
+    else disableMicrophone();
+  }, [singerId, userId]);
 
   useEffect(() => {
     if (avatarIndexParam !== undefined) {
@@ -29,19 +50,8 @@ export default function ReadyController({ route, navigation }) {
   useEffect(() => {
     const socket = getSocket();
     socketRef.current = socket;
-
-    const singerSocketId = singerId?.socketId || singerId;
-    if (socket.id === singerSocketId) {
-      setIsSinger(true);
-    }
-
     socket.on('connect', () => {
       console.log('Nouveau socket.id après reconnexion:', socket.id);
-
-      const singerSocketId = singerId?.socketId || singerId;
-      if (socket.id === singerSocketId) {
-        setIsSinger(true);
-      }
     });
 
     console.log('socket.id:', socket.id);
@@ -56,6 +66,7 @@ export default function ReadyController({ route, navigation }) {
         currentSong,
         singerId: readySingerId,
         songId,
+        userId,
       });
     });
 
@@ -64,7 +75,7 @@ export default function ReadyController({ route, navigation }) {
       clearInterval(timerRef.current);
       setSkipped(true);
       setTimeout(() => {
-        navigation.replace('Lobby', { lobbyId, role });
+        navigation.replace('Lobby', { lobbyId, role,  pseudo, avatarIndex: avatarIndexRef.current, userId, });
       }, 2000);
     });
 
