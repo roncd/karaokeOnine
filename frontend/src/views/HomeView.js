@@ -3,24 +3,14 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
   StatusBar,
   Image,
-  Platform,
   useWindowDimensions,
 } from 'react-native';
 import styles from './viewStyles/HomeView.styles';
 import GlowStar from '../components/GlowStar';
-
-// const NAVY = '#0B3D5E';
-// const YELLOW = '#F5E642';
-
-function Sparkle({ style, size = 18 }) {
-  return (
-    <Text style={[styles.sparkle, style, { fontSize: size }]}>+</Text>
-  );
-}
+import { FloatingNote, FloatingSparkle } from '../components/FloatingDecor';
 
 export default function HomeView({ onCreateLobby, onJoinLobby }) {
   const { width } = useWindowDimensions();
@@ -38,19 +28,77 @@ export default function HomeView({ onCreateLobby, onJoinLobby }) {
       </View>
 
       <View style={styles.container}>
-        <GlowStar size={240} style={styles.starTopLeft} opacity={0.9} />
-        <GlowStar size={170} style={styles.starLeftMid} opacity={0.75} />
-        <GlowStar size={150} style={styles.starRightMid} opacity={0.8} />
-        <GlowStar size={210} style={styles.starBottomLeft} opacity={0.85} />
-        <GlowStar size={190} style={styles.starBottomCenter} opacity={0.65} />
+        <GlowStar
+          size={240}
+          style={styles.starTopLeft}
+          opacity={0.9}
+          floatY={14}
+          rotateDeg={4}
+          duration={7800}
+        />
+        <GlowStar
+          size={170}
+          style={styles.starLeftMid}
+          opacity={0.75}
+          floatY={10}
+          rotateDeg={7}
+          duration={9200}
+          delay={400}
+        />
+        <GlowStar
+          size={150}
+          style={styles.starRightMid}
+          opacity={0.8}
+          floatY={12}
+          rotateDeg={6}
+          duration={6800}
+          delay={800}
+        />
+        <GlowStar
+          size={210}
+          style={styles.starBottomLeft}
+          opacity={0.85}
+          floatY={16}
+          rotateDeg={5}
+          duration={8400}
+          delay={200}
+        />
+        <GlowStar
+          size={190}
+          style={styles.starBottomCenter}
+          opacity={0.65}
+          floatY={11}
+          rotateDeg={8}
+          duration={9600}
+          delay={600}
+        />
 
-        <Sparkle style={styles.sparkle1} />
-        <Sparkle style={styles.sparkle2} size={16} />
-        <Sparkle style={styles.sparkle3} size={14} />
-        <Sparkle style={styles.sparkle4} size={20} />
+        <FloatingSparkle style={[styles.sparkle, styles.sparkle1]} duration={2400} />
+        <FloatingSparkle
+          style={[styles.sparkle, styles.sparkle2]}
+          size={16}
+          duration={2800}
+          delay={300}
+        />
+        <FloatingSparkle
+          style={[styles.sparkle, styles.sparkle3]}
+          size={14}
+          duration={2100}
+          delay={600}
+        />
+        <FloatingSparkle
+          style={[styles.sparkle, styles.sparkle4]}
+          size={20}
+          duration={2600}
+          delay={150}
+        />
 
-        <Text style={styles.noteSingle}>♪</Text>
-        <Text style={styles.noteBeamed}>♫</Text>
+        <FloatingNote style={styles.noteSingle} duration={5200}>
+          ♪
+        </FloatingNote>
+        <FloatingNote style={styles.noteBeamed} duration={4800} delay={350} floatY={10}>
+          ♫
+        </FloatingNote>
 
         <View style={styles.hero}>
           <Text style={[styles.title, isCompact && styles.titleCompact]}>
