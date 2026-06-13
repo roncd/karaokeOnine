@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { TOAST_MESSAGES } from './toastMessages';
+import { USE_NATIVE_DRIVER } from '../utils/animation';
 
 const YELLOW = '#F5E642';
 const NAVY = '#1A3651';
@@ -50,9 +51,9 @@ export default function Toast(props) {
 
     opacity.setValue(0);
     const animation = Animated.sequence([
-      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: USE_NATIVE_DRIVER }),
       Animated.delay(2500),
-      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: USE_NATIVE_DRIVER }),
     ]);
 
     animation.start();

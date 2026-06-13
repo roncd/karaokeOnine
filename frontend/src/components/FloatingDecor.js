@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text } from 'react-native';
+import { USE_NATIVE_DRIVER } from '../utils/animation';
 
 export function FloatingSparkle({ style, size = 18, duration = 2200, delay = 0 }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -11,12 +12,12 @@ export function FloatingSparkle({ style, size = 18, duration = 2200, delay = 0 }
           toValue: 1,
           duration: duration / 2,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(pulse, {
           toValue: 0,
           duration: duration / 2,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]),
     );
@@ -54,12 +55,12 @@ export function FloatingNote({ style, children, duration = 4500, delay = 0, floa
           toValue: 1,
           duration: duration / 2,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(progress, {
           toValue: 0,
           duration: duration / 2,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]),
     );
