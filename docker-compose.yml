@@ -28,6 +28,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: karaoke-backend:local
+    pull_policy: build
     container_name: karaoke-backend
     restart: unless-stopped
     depends_on:
@@ -61,6 +63,8 @@ services:
       dockerfile: Dockerfile
       args:
         EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:3000}
+    image: karaoke-frontend:local
+    pull_policy: build
     container_name: karaoke-frontend
     restart: unless-stopped
     depends_on:

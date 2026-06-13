@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:20-alpine AS base
 
 ARG BUILD_VERSION=local
@@ -13,30 +15,29 @@ LABEL org.opencontainers.image.title="backend" \
 
 WORKDIR /app
 
-RUN apk update \
-  && apk upgrade --no-cache openssl libcrypto3 libssl3 \
-  && rm -rf /var/cache/apk/*
-
 ENV NODE_ENV=production \
   PORT=3000
-
-RUN addgroup -S app && adduser -S app -G app
 
 FROM base AS dependencies
 
 COPY package*.json ./
-RUN npm ci --omit=dev \
-  && mkdir -p node_modules \
-  && npm cache clean --force
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --omit=dev --prefer-offline --no-audit --no-fund
 
 FROM base AS runtime
 
+RUN --mount=type=cache,target=/var/cache/apk \
+  apk update \
+  && apk upgrade --no-cache openssl libcrypto3 libssl3 \
+  && rm -rf /var/cache/apk/* \
+  && addgroup -S app && adduser -S app -G app
+
 COPY --from=dependencies --chown=app:app /app/node_modules ./node_modules
 COPY --chown=app:app package*.json ./
+COPY --chown=app:app src ./src
+COPY --chown=app:app assets ./assets
 
 ARG CACHE_BUST
-
-COPY --chown=app:app src ./src
 
 USER app
 
