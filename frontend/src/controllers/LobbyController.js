@@ -6,10 +6,15 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import LobbyView from '../views/LobbyView';
-import { getSocket, disconnectSocket } from '../services/socketService';
-import { clearSession } from '../services/sessionService';
-import { connectToRoom, disconnectFromRoom, toggleMicrophone } from '../services/livekitService';
-import { enableMicrophone, disableMicrophone, getRoom } from '../services/livekitService';
+import { getSocket, disconnectSocket, joinRoom } from '../services/socketService';
+import { clearSession, saveSession } from '../services/sessionService';
+import {
+  connectToRoom,
+  disconnectFromRoom,
+  toggleMicrophone,
+  enableLobbyMicrophones,
+  isMicEnabled,
+} from '../services/livekitService';
 import { useToast } from '../hooks/useToast';
 
 export default function LobbyController({ route, navigation }) {
@@ -21,9 +26,8 @@ export default function LobbyController({ route, navigation }) {
   const [skipVotes, setSkipVotes] = useState(0);
   const [userCount, setUserCount] = useState(1);
   const { toast, showToast } = useToast();
-  const [participants, setParticipants] = useState([]);
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
-  const [micEnabled, setMicEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(false);
 
   useEffect(() => {
     if (avatarIndexParam !== undefined) {
@@ -32,28 +36,37 @@ export default function LobbyController({ route, navigation }) {
   }, [avatarIndexParam]);
 
   useEffect(() => {
-    if (!userId) return;
-    connectToRoom(lobbyId, userId);
-    return () => disconnectFromRoom();
-  }, [lobbyId, userId]);
+    if (!lobbyId || !pseudo || userId == null) return undefined;
 
+    joinRoom(lobbyId, pseudo, avatarIndexRef.current, userId);
+    saveSession({
+      lobbyId,
+      role,
+      pseudo,
+      avatarIndex: avatarIndexRef.current,
+      userId,
+    });
+  }, [lobbyId, pseudo, userId, role]);
 
   useEffect(() => {
-    const socket = getSocket();
+    if (!userId) return undefined;
 
-    socket.on('singer-selected', ({ singerId }) => {
-      socket.on('singer-selected', async ({ singerId }) => {
-        await waitForLivekitReady();
+    let cancelled = false;
 
-        if (singerId === userId) enableMicrophone();
-        else disableMicrophone();
-      });
-    });
+    const setupLivekit = async () => {
+      await connectToRoom(lobbyId, userId);
+      const enabled = await enableLobbyMicrophones();
+      if (!cancelled) {
+        setMicEnabled(enabled ?? isMicEnabled());
+      }
+    };
+
+    setupLivekit();
 
     return () => {
-      socket.off('singer-selected');
+      cancelled = true;
     };
-  }, [userId]);
+  }, [lobbyId, userId]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -71,20 +84,22 @@ export default function LobbyController({ route, navigation }) {
       setIsConnected(false);
     });
 
-    socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
+    socket.on('user-joined', () => {
       setUserCount((prev) => prev + 1);
-      setParticipants(prev => [...prev, { id: userId, pseudo, avatarIndex }]);
-
     });
 
-    socket.on('countdown-started', ({ currentSong, singerId, songId }) => {
+    socket.on('countdown-started', ({ currentSong, singerId, songId, singerPseudo, singerAvatarIndex }) => {
       navigation.replace('Ready', {
         lobbyId,
         role,
         singerId,
+        singerPseudo,
+        singerAvatarIndex,
         currentSong,
         songId,
         userId,
+        pseudo,
+        avatarIndex: avatarIndexRef.current,
       });
     });
 
@@ -134,13 +149,13 @@ export default function LobbyController({ route, navigation }) {
       socket.off('song-not-found');
       socket.off('connect_error');
     };
-  }, [lobbyId]);
+  }, [lobbyId, navigation, role, userId, pseudo, showToast]);
 
   const handleAddSong = (songTitle) => {
     socketRef.current?.emit('add-song', {
       roomCode: lobbyId,
       songTitle: songTitle.trim(),
-      pseudo: pseudo,
+      pseudo,
       avatarIndex: avatarIndexRef.current,
     });
   };
@@ -171,6 +186,7 @@ export default function LobbyController({ route, navigation }) {
   };
 
   const handleLeave = async () => {
+    disconnectFromRoom();
     await clearSession();
     disconnectSocket();
     navigation.navigate('Home');
@@ -178,7 +194,7 @@ export default function LobbyController({ route, navigation }) {
 
   const handleToggleMic = async () => {
     const newState = await toggleMicrophone();
-    setMicEnabled(newState);
+    setMicEnabled(Boolean(newState));
   };
 
   return (

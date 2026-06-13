@@ -361,6 +361,8 @@ function SkipVoteBar({ skipVotes, totalParticipants, skipThreshold, onSkipVote }
 // ─── LyricsView ───────────────────────────────────────────────────────────────
 export default function LyricsView({
   lyrics,
+  lyricsLoading = false,
+  lyricsError = null,
   currentLineIndex,
   currentSong,
   queue,
@@ -385,8 +387,12 @@ export default function LyricsView({
   // ─── Paroles : ligne précédente + courante + suivante ─────────────────────
   const LyricsPanel = () => (
     <View style={styles.lyricsPanel}>
-      {lyrics.length === 0 ? (
+      {lyricsLoading ? (
         <Text style={styles.loadingText}>Chargement des paroles...</Text>
+      ) : lyricsError ? (
+        <Text style={styles.loadingText}>{lyricsError}</Text>
+      ) : lyrics.length === 0 ? (
+        <Text style={styles.loadingText}>Aucune parole disponible.</Text>
       ) : (
         [-1, 0, 1].map((offset) => {
           const index = currentLineIndex + offset;

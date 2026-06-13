@@ -83,7 +83,12 @@ router.get('/:id/audio', async (req, res) => {
       return res.status(404).json({ error: 'Chanson introuvable.' });
     }
 
-    const filePath = path.join(__dirname, '../../', result.rows[0].audio_path);
+    const audioPath = result.rows[0].audio_path;
+    if (!audioPath) {
+      return res.status(404).json({ error: 'Audio non disponible pour cette chanson.' });
+    }
+
+    const filePath = path.join(__dirname, '../../', audioPath);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Fichier audio introuvable.' });
     }
@@ -105,7 +110,12 @@ router.get('/:id/lyrics', async (req, res) => {
       return res.status(404).json({ error: 'Chanson introuvable.' });
     }
 
-    const filePath = path.join(__dirname, '../../', result.rows[0].lyrics_path);
+    const lyricsPath = result.rows[0].lyrics_path;
+    if (!lyricsPath) {
+      return res.status(404).json({ error: 'Paroles non disponibles pour cette chanson.' });
+    }
+
+    const filePath = path.join(__dirname, '../../', lyricsPath);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Fichier paroles introuvable.' });
     }

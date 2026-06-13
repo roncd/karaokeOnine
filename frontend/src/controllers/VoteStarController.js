@@ -1,9 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import VoteStarView from '../views/VoteStarView';
 import { getSocket, disconnectSocket } from '../services/socketService';
+import {
+  connectToRoom,
+  enableLobbyMicrophones,
+} from '../services/livekitService';
 
 export default function VoteStarController({ route, navigation }) {
-  const { lobbyId, role, hostId, pseudo, avatarIndex: avatarIndexParam } = route.params;
+  const {
+    lobbyId,
+    role,
+    hostId,
+    pseudo,
+    avatarIndex: avatarIndexParam,
+    userId,
+  } = route.params;
 
   const socketRef = useRef(null);
   const [participants, setParticipants] = useState([]);
@@ -17,6 +28,17 @@ export default function VoteStarController({ route, navigation }) {
       avatarIndexRef.current = avatarIndexParam;
     }
   }, [avatarIndexParam]);
+
+  useEffect(() => {
+    if (!userId) return undefined;
+
+    const setup = async () => {
+      await connectToRoom(lobbyId, userId);
+      await enableLobbyMicrophones();
+    };
+
+    setup();
+  }, [lobbyId, userId]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -35,9 +57,9 @@ export default function VoteStarController({ route, navigation }) {
       setParticipants(list);
     });
 
-    socket.on('user-joined', ({ userId, pseudo, avatarIndex }) => {
+    socket.on('user-joined', ({ userId: joinedId, pseudo: p, avatarIndex }) => {
       setParticipants((prev) =>
-        prev.some(p => p.id === userId) ? prev : [...prev, { id: userId, pseudo, avatarIndex }]
+        prev.some((p) => p.id === joinedId) ? prev : [...prev, { id: joinedId, pseudo: p, avatarIndex }]
       );
     });
 
@@ -58,9 +80,9 @@ export default function VoteStarController({ route, navigation }) {
     };
   }, [lobbyId]);
 
-  const handleSelect = (userId) => {
+  const handleSelect = (id) => {
     if (hasVoted) return;
-    setSelectedId(userId);
+    setSelectedId(id);
   };
 
   const handleConfirm = () => {
@@ -74,7 +96,13 @@ export default function VoteStarController({ route, navigation }) {
 
   const handleContinue = () => {
     disconnectSocket();
-    navigation.replace('Lobby', { lobbyId, role });
+    navigation.replace('Lobby', {
+      lobbyId,
+      role,
+      pseudo,
+      avatarIndex: avatarIndexRef.current,
+      userId,
+    });
   };
 
   return (

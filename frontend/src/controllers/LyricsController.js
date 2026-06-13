@@ -8,9 +8,13 @@ import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import LyricsView from '../views/LyricsView';
 import Toast from '../components/Toast';
-import { getSocket } from '../services/socketService';
+import { getSocket, joinRoom } from '../services/socketService';
 import { API_URL } from '../config';
-import { enableMicrophone, disableMicrophone } from '../services/livekitService';
+import {
+  connectToRoom,
+  applySingerMicPolicy,
+  enableLobbyMicrophones,
+} from '../services/livekitService';
 import { useToast } from '../hooks/useToast';
 
 if (Platform.OS === 'web' && !global.SyntheticPlatformEmitter) {
@@ -53,6 +57,8 @@ export default function LyricsController({ route, navigation }) {
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
 
   const [lyrics, setLyrics] = useState([]);
+  const [lyricsLoading, setLyricsLoading] = useState(true);
+  const [lyricsError, setLyricsError] = useState(null);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [reactions, setReactions] = useState([]);
   const [queue, setQueue] = useState([]);
@@ -69,12 +75,20 @@ export default function LyricsController({ route, navigation }) {
   }, [avatarIndexParam]);
 
   useEffect(() => {
-    if (singerId === userId) {
-      enableMicrophone();
-    } else {
-      disableMicrophone();
-    }
-  }, []);
+    if (!lobbyId || !pseudo || userId == null) return undefined;
+    joinRoom(lobbyId, pseudo, avatarIndexRef.current, userId);
+  }, [lobbyId, pseudo, userId]);
+
+  useEffect(() => {
+    if (!userId) return undefined;
+
+    const setup = async () => {
+      await connectToRoom(lobbyId, userId);
+      await applySingerMicPolicy(singerId, userId);
+    };
+
+    setup();
+  }, [lobbyId, singerId, userId]);
 
 
   // ─── Socket ───────────────────────────────────────────────────────────────
@@ -125,8 +139,15 @@ export default function LyricsController({ route, navigation }) {
       }
     });
 
-    socket.on('turn-skipped', () => {
-      navigation.replace('Lobby', { lobbyId, role, pseudo, avatarIndex: avatarIndexRef.current });
+    socket.on('turn-skipped', async () => {
+      await enableLobbyMicrophones();
+      navigation.replace('Lobby', {
+        lobbyId,
+        role,
+        pseudo,
+        avatarIndex: avatarIndexRef.current,
+        userId,
+      });
     });
 
     socket.on('connect_error', (err) => {
@@ -149,25 +170,49 @@ export default function LyricsController({ route, navigation }) {
   useEffect(() => {
     let isMounted = true;
     const loadSong = async () => {
+      if (!songId) {
+        if (isMounted) {
+          setLyricsLoading(false);
+          setLyricsError('Chanson introuvable.');
+        }
+        return;
+      }
+
+      setLyricsLoading(true);
+      setLyricsError(null);
+
       try {
         const lyricsRes = await fetch(`${API_URL}/api/songs/${songId}/lyrics`);
-        if (!lyricsRes.ok) throw new Error(`HTTP ${lyricsRes.status}`);
+        if (!lyricsRes.ok) {
+          const err = await lyricsRes.json().catch(() => ({}));
+          throw new Error(err.error || `HTTP ${lyricsRes.status}`);
+        }
         const lyricsData = await lyricsRes.json();
         const parsed = parseLrc(lyricsData.lyrics);
         if (!isMounted) return;
+
+        if (parsed.length === 0) {
+          throw new Error('Aucune ligne de paroles trouvée.');
+        }
+
         setLyrics(parsed);
         lyricsRef.current = parsed;
+        setLyricsLoading(false);
 
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: `${API_URL}/api/songs/${songId}/audio` },
-          { shouldPlay: true }
-        );
-        if (!isMounted) {
-          sound.unloadAsync();
-          return;
+        try {
+          await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+          const { sound } = await Audio.Sound.createAsync(
+            { uri: `${API_URL}/api/songs/${songId}/audio` },
+            { shouldPlay: true }
+          );
+          if (!isMounted) {
+            sound.unloadAsync();
+            return;
+          }
+          soundRef.current = sound;
+        } catch (audioErr) {
+          console.warn('Erreur lecture audio :', audioErr.message);
         }
-        soundRef.current = sound;
 
         intervalRef.current = setInterval(async () => {
           if (!soundRef.current) return;
@@ -186,17 +231,27 @@ export default function LyricsController({ route, navigation }) {
           if (status.didJustFinish && !hasNavigated.current) {
             hasNavigated.current = true;
             clearInterval(intervalRef.current);
-            enableMicrophone();
+            await enableLobbyMicrophones();
 
             const socket = socketRef.current;
 
             socket.once('song-finished-ack', ({ remaining }) => {
               if (remaining > 0) {
-                navigation.replace('Lobby', { lobbyId, role, pseudo, avatarIndex: avatarIndexRef.current });
+                navigation.replace('Lobby', {
+                  lobbyId,
+                  role,
+                  pseudo,
+                  avatarIndex: avatarIndexRef.current,
+                  userId,
+                });
               } else {
                 navigation.replace('VoteStar', {
-                  lobbyId, role, hostId: singerId,
-                  pseudo, avatarIndex: avatarIndexRef.current,
+                  lobbyId,
+                  role,
+                  hostId: singerId,
+                  pseudo,
+                  avatarIndex: avatarIndexRef.current,
+                  userId,
                 });
               }
             });
@@ -207,10 +262,14 @@ export default function LyricsController({ route, navigation }) {
 
       } catch (err) {
         console.warn('Erreur chargement chanson :', err.message);
+        if (isMounted) {
+          setLyricsLoading(false);
+          setLyricsError(err.message || 'Impossible de charger les paroles.');
+        }
       }
     };
 
-    if (songId) loadSong();
+    loadSong();
 
     return () => {
       isMounted = false;
@@ -241,9 +300,14 @@ export default function LyricsController({ route, navigation }) {
     hasNavigated.current = true;
     clearInterval(intervalRef.current);
     await soundRef.current?.stopAsync();
+    await enableLobbyMicrophones();
     navigation.replace('VoteStar', {
-      lobbyId, role, hostId: singerId,
-      pseudo, avatarIndex: avatarIndexRef.current,
+      lobbyId,
+      role,
+      hostId: singerId,
+      pseudo,
+      avatarIndex: avatarIndexRef.current,
+      userId,
     });
   };
 
@@ -259,6 +323,8 @@ export default function LyricsController({ route, navigation }) {
     <>
       <LyricsView
         lyrics={lyrics}
+        lyricsLoading={lyricsLoading}
+        lyricsError={lyricsError}
         currentLineIndex={currentLineIndex}
         currentSong={currentSong}
         queue={queue}

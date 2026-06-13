@@ -73,6 +73,12 @@ export default StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  singerName: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 
   // Chanson
   songTitle: {

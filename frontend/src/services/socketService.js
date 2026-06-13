@@ -4,7 +4,7 @@ import { API_URL } from '../config';
 const SOCKET_URL = API_URL;
 
 let socket = null;
-let currentRoom = null;
+let lastJoinPayload = null;
 
 export const getSocket = () => {
   if (!socket) {
@@ -12,26 +12,31 @@ export const getSocket = () => {
       transports: ['websocket'],
       reconnection: true,
     });
+
+    socket.on('connect', () => {
+      if (lastJoinPayload) {
+        socket.emit('join-room', lastJoinPayload);
+      }
+    });
   }
   return socket;
 };
 
 export const joinRoom = (roomCode, pseudo, avatarIndex, userId) => {
+  lastJoinPayload = { roomCode, pseudo, avatarIndex, userId };
   const s = getSocket();
-  const payload = { roomCode, pseudo, avatarIndex, userId };
 
   if (s.connected) {
-    s.emit('join-room', payload);
+    s.emit('join-room', lastJoinPayload);
   } else {
     s.once('connect', () => {
-      s.emit('join-room', payload);
+      s.emit('join-room', lastJoinPayload);
     });
   }
 };
 
-
 export const disconnectSocket = () => {
-  currentRoom = null;
+  lastJoinPayload = null;
   if (socket) {
     socket.disconnect();
     socket = null;

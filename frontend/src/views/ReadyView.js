@@ -55,6 +55,8 @@ const getAvatarForUser = (singerId) => {
 
 export default function ReadyView({
   isSinger,
+  singerPseudo,
+  singerAvatarIndex,
   currentSong,
   timeLeft,
   total,
@@ -63,6 +65,9 @@ export default function ReadyView({
   singerId,
 }) {
   const progress = timeLeft / total; // 1 → 0
+  const avatarSource = singerAvatarIndex != null
+    ? AVATARS[singerAvatarIndex % AVATARS.length]
+    : getAvatarForUser(singerId);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -79,8 +84,14 @@ export default function ReadyView({
         {/* Avatar + bouton prêt */}
         <View style={styles.avatarBlock}>
           <View style={styles.avatarCircle}>
-            <Image source={getAvatarForUser(singerId)} style={styles.avatarImage} />
+            <Image source={avatarSource} style={styles.avatarImage} />
           </View>
+
+          {singerPseudo ? (
+            <Text style={styles.singerName}>
+              {isSinger ? 'C\'est ton tour !' : `${singerPseudo} va chanter`}
+            </Text>
+          ) : null}
 
           {isSinger && !skipped && (
             <TouchableOpacity style={styles.readyBtn} onPress={onReady}>
