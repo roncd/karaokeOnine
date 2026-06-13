@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Image } from 'react-native';
+import { USE_NATIVE_DRIVER } from '../utils/animation';
 
 export default function GlowStar({
   size = 120,
@@ -19,12 +20,12 @@ export default function GlowStar({
           toValue: 1,
           duration: duration / 2,
           delay,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(progress, {
           toValue: 0,
           duration: duration / 2,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]),
     );
