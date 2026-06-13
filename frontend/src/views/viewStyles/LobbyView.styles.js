@@ -146,6 +146,10 @@ export default StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  emptyQueueWithStats: {
+    flex: 0,
+    paddingVertical: 32,
+  },
   emptyText: { color: '#fff', fontSize: 16, fontWeight: '700', opacity: 0.5 },
   emptyHint: { color: '#fff', fontSize: 13, opacity: 0.3 },
 

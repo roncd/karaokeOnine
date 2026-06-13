@@ -9,6 +9,9 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: NAVY,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   header: {
     paddingHorizontal: 28,
     paddingTop: Platform.OS === 'web' ? 24 : 8,
@@ -20,12 +23,14 @@ export default StyleSheet.create({
     resizeMode: 'contain',
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingBottom: 48,
+    paddingTop: 12,
     overflow: 'hidden',
+    minHeight: 560,
   },
   hero: {
     alignItems: 'center',

@@ -21,8 +21,11 @@ import {
   ActivityIndicator,
   Platform,
   Image,
+  ScrollView,
 } from 'react-native';
 import styles from './viewStyles/LobbyView.styles';
+import PopularSongsSection from '../components/PopularSongsSection';
+import useTopSongs from '../hooks/useTopSongs';
 
 // ─── Logo étoile O'9 ────────────────────────────────────────────────────────
 function StarLogo({ isHost }) {
@@ -112,7 +115,7 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
 // }
 
 // ─── Vue HÔTE : file d'attente ───────────────────────────────────────────────
-function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown, micEnabled, onToggleMic }) {
+function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown, micEnabled, onToggleMic, topSongs, topSongsLoading }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [songInput, setSongInput] = useState('');
   const [songs, setSongs] = useState([]);
@@ -174,10 +177,17 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 
       {/* Liste */}
       {queue.length === 0 ? (
-        <View style={styles.emptyQueue}>
-          <Text style={styles.emptyText}>La file est vide</Text>
-          <Text style={styles.emptyHint}>Ajoutez une chanson pour commencer !</Text>
-        </View>
+        <>
+          <View style={[styles.emptyQueue, styles.emptyQueueWithStats]}>
+            <Text style={styles.emptyText}>La file est vide</Text>
+            <Text style={styles.emptyHint}>Ajoutez une chanson pour commencer !</Text>
+          </View>
+          <PopularSongsSection
+            topSongs={topSongs}
+            loading={topSongsLoading}
+            compact
+          />
+        </>
       ) : (
         <FlatList
           data={queue}
@@ -194,6 +204,13 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
           )}
           style={styles.flex}
           showsVerticalScrollIndicator={false}
+          ListFooterComponent={(
+            <PopularSongsSection
+              topSongs={topSongs}
+              loading={topSongsLoading}
+              compact
+            />
+          )}
         />
       )}
 
@@ -287,7 +304,7 @@ const GENRES = [
   //emoji a retirer
 ];
 
-function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic }) {
+function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic, topSongs, topSongsLoading }) {
   const [songs, setSongs] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -365,8 +382,7 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
   };
 
   return (
-    <View style={styles.flex}>
-
+    <ScrollView style={styles.flex} showsVerticalScrollIndicator={false}>
       {/* Titre catalogue */}
       <View style={styles.catalogueHeader}>
         <Text style={styles.catalogueTitle}>Catalogue</Text>
@@ -388,6 +404,12 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
           </TouchableOpacity>
         ))}
       </View>
+
+      <PopularSongsSection
+        topSongs={topSongs}
+        loading={topSongsLoading}
+        compact
+      />
 
       <TouchableOpacity onPress={onToggleMic}>
         <Text>{micEnabled ? "🎤 Micro ON" : "🔇 Micro OFF"}</Text>
@@ -450,7 +472,7 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -476,6 +498,7 @@ export default function LobbyView({
   onToggleMic,
 }) {
   const isHost = role === 'host';
+  const { topSongs, loading: topSongsLoading } = useTopSongs();
 
   return (
     <>
@@ -513,6 +536,8 @@ export default function LobbyView({
               onDeleteSong={onDeleteSong}
               onMoveUp={onMoveUp}
               onMoveDown={onMoveDown}
+              topSongs={topSongs}
+              topSongsLoading={topSongsLoading}
             />
           ) : (
             <GuestView
@@ -521,6 +546,8 @@ export default function LobbyView({
               onVoteSkip={onVoteSkip}
               onAddSong={onAddSong}
               onStartSong={onStartSong}
+              topSongs={topSongs}
+              topSongsLoading={topSongsLoading}
             />
           )}
         </View>
