@@ -4,8 +4,9 @@ const { roomParticipants, roomSingers, roomQueues, roomSongIds, roomVotes, roomS
 function registerRoomHandlers(io, socket) {
 
   socket.on("join-room", ({ roomCode, pseudo, avatarIndex, userId, isHost }) => {
+    const resolvedUserId = userId || socket.id;
 
-    socketToUserId[socket.id] = userId;
+    socketToUserId[socket.id] = resolvedUserId;
     socket.roomCode = roomCode;
 
     const MAX_PLAYERS = 9;
@@ -20,8 +21,8 @@ function registerRoomHandlers(io, socket) {
 
     if (!roomParticipants[roomCode]) roomParticipants[roomCode] = [];
 
-    const existing = roomParticipants[roomCode].findIndex(p => p.id === userId);
-    const participant = { id: userId, pseudo, avatarIndex };
+    const existing = roomParticipants[roomCode].findIndex(p => p.id === resolvedUserId);
+    const participant = { id: resolvedUserId, pseudo, avatarIndex };
 
     if (existing >= 0) {
       roomParticipants[roomCode][existing] = participant;
@@ -30,7 +31,7 @@ function registerRoomHandlers(io, socket) {
     }
 
     io.to(roomCode).emit("user-joined", {
-      userId,
+      userId: resolvedUserId,
       pseudo,
       avatarIndex,
       isHost: !!isHost,
