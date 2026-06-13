@@ -36,7 +36,8 @@ describe('GET /api/stats/home', () => {
       `INSERT INTO queue (salon_id, user_id, song_id, position, status) VALUES
        ($1, $2, $3, 1, 'En cours'),
        ($1, $2, $3, 2, 'En attente'),
-       ($1, $2, $4, 3, 'Skippé')`,
+       ($1, $2, $4, 3, 'En cours'),
+       ($1, $2, $4, 4, 'Skippé')`,
       [salon.rows[0].id, user.rows[0].id, songA.rows[0].id, songB.rows[0].id],
     );
 
@@ -46,7 +47,9 @@ describe('GET /api/stats/home', () => {
     expect(res.body.topSongs).toHaveLength(2);
     expect(res.body.topSongs[0].titre).toBe('Bohemian Rhapsody');
     expect(res.body.topSongs[0].playCount).toBe(2);
-    expect(res.body.totals.songs_played).toBe(2);
+    expect(res.body.topSongs[1].titre).toBe('Imagine');
+    expect(res.body.topSongs[1].playCount).toBe(1);
+    expect(res.body.totals.songs_played).toBe(3);
     expect(res.body.totals.salons).toBe(1);
     expect(res.body.totals.players).toBe(1);
   });
