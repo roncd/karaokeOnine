@@ -10,6 +10,7 @@ import { getSocket, disconnectSocket } from '../services/socketService';
 import { clearSession } from '../services/sessionService';
 import { connectToRoom, disconnectFromRoom, toggleMicrophone } from '../services/livekitService';
 import { enableMicrophone, disableMicrophone, getRoom } from '../services/livekitService';
+import { useToast } from '../hooks/useToast';
 
 export default function LobbyController({ route, navigation }) {
   const { lobbyId, role, pseudo, avatarIndex: avatarIndexParam, userId } = route.params;
@@ -18,9 +19,8 @@ export default function LobbyController({ route, navigation }) {
   const [isConnected, setIsConnected] = useState(false);
   const [queue, setQueue] = useState([]);
   const [skipVotes, setSkipVotes] = useState(0);
-  const [skippedSong, setSkippedSong] = useState(null);
   const [userCount, setUserCount] = useState(1);
-  const [toastMessage, setToastMessage] = useState('');
+  const { toast, showToast } = useToast();
   const [participants, setParticipants] = useState([]);
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
   const [micEnabled, setMicEnabled] = useState(true);
@@ -98,13 +98,24 @@ export default function LobbyController({ route, navigation }) {
     });
 
     socket.on('song-skipped', ({ skippedSong }) => {
-      setSkippedSong(skippedSong);
-      setTimeout(() => setSkippedSong(null), 3000);
+      const titre = typeof skippedSong === 'string' ? skippedSong : skippedSong?.titre;
+      showToast('songSkipped', {
+        subtitle: titre
+          ? `« ${titre} » a été passé.`
+          : 'Le morceau a été passé.',
+      });
+    });
+
+    socket.on('song-added', ({ titre }) => {
+      showToast('songAdded', {
+        subtitle: titre
+          ? `« ${titre} » a été ajouté à la file d'attente.`
+          : undefined,
+      });
     });
 
     socket.on('song-not-found', () => {
-      setToastMessage('Veuillez essayer un autre morceau.');
-      setTimeout(() => setToastMessage(''), 3000);
+      showToast('songNotFound');
     });
 
     socket.on('connect_error', (err) => {
@@ -119,6 +130,7 @@ export default function LobbyController({ route, navigation }) {
       socket.off('queue-updated');
       socket.off('skip-updated');
       socket.off('song-skipped');
+      socket.off('song-added');
       socket.off('song-not-found');
       socket.off('connect_error');
     };
@@ -135,6 +147,7 @@ export default function LobbyController({ route, navigation }) {
 
   const handleVoteSkip = () => {
     socketRef.current?.emit('vote-skip', { roomCode: lobbyId });
+    showToast('skipVote');
   };
 
   const handleStartSong = () => {
@@ -144,6 +157,7 @@ export default function LobbyController({ route, navigation }) {
 
   const handleDeleteSong = (index) => {
     socketRef.current?.emit('remove-song', { roomCode: lobbyId, index });
+    showToast('songDeleted');
   };
 
   const handleMoveUp = (index) => {
@@ -174,9 +188,8 @@ export default function LobbyController({ route, navigation }) {
       isConnected={isConnected}
       queue={queue}
       skipVotes={skipVotes}
-      skippedSong={skippedSong}
       userCount={userCount}
-      toastMessage={toastMessage}
+      toast={toast}
       onAddSong={handleAddSong}
       onVoteSkip={handleVoteSkip}
       onLeave={handleLeave}
