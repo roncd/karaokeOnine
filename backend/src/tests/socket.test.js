@@ -1,91 +1,154 @@
-const { io } = require("socket.io-client");
+const { httpServer, io } = require('../server');
+const { io: ioc } = require('socket.io-client');
+const pool = require('../db/db');
 
-const socket = io("http://localhost:3000");
+let clientSocket;
+const PORT = 3001;
+const TIMEOUT = 10000;
 
-socket.on("connect", () => {
-
-  console.log("Connecté !");
-  console.log("ID :", socket.id);
-
-  socket.emit("join-room", "ABC123");
-
-  setTimeout(() => {
-
-  socket.emit("add-song", {
-    roomCode: "ABC123",
-    songTitle: "Bohemian Rhapsody"
+function waitFor(socket, event) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${event}`)), TIMEOUT - 500);
+    socket.once(event, (data) => {
+      clearTimeout(timer);
+      resolve(data);
+    });
   });
+}
 
-}, 1000);
-
-setTimeout(() => {
-
-  socket.emit("add-song", {
-    roomCode: "ABC123",
-    songTitle: "Imagine"
+beforeAll((done) => {
+  httpServer.listen(PORT, () => {
+    clientSocket = ioc(`http://localhost:${PORT}`, {
+      transports: ['websocket'],
+    });
+    clientSocket.on('connect', done);
   });
-
-}, 2000);
-
-setTimeout(() => {
-
-  socket.emit("add-song", {
-    roomCode: "ABC123",
-    songTitle: "Wonderwall"
-  });
-
-}, 3000);
-
-setTimeout(() => {
-
-  socket.emit("vote-skip", {
-    roomCode: "ABC123"
-  });
-
-}, 4000);
-
-setTimeout(() => {
-
-  socket.emit("vote-skip", {
-    roomCode: "ABC123"
-  });
-
-}, 5000);
-
 });
 
-socket.on("user-joined", (data) => {
-
-  console.log("Utilisateur rejoint :", data);
-
+beforeEach(async () => {
+  await pool.query(`DELETE FROM queue`);
+  await pool.query(`DELETE FROM song`);
+  await pool.query(`
+    INSERT INTO song (titre, artiste, genre, duree, annee) VALUES
+    ('Bohemian Rhapsody', 'Queen', 'Rock', 354, 1975),
+    ('Imagine', 'John Lennon', 'Pop', 183, 1971),
+    ('Wonderwall', 'Oasis', 'Rock', 258, 1995),
+    ('Billie Jean', 'Michael Jackson', 'Pop', 294, 1982),
+    ('Purple Rain', 'Prince', 'Rock', 512, 1984),
+    ('Hotel California', 'Eagles', 'Rock', 390, 1976),
+    ('Stairway to Heaven', 'Led Zeppelin', 'Rock', 482, 1971)
+  `);
 });
 
-socket.on("song-added", (data) => {
-
-  console.log("Nouvelle chanson :", data.songTitle);
-
+afterAll(async () => {
+  if (clientSocket.connected) clientSocket.disconnect();
+  io.close();
+  await new Promise((resolve) => httpServer.close(resolve));
+  await pool.query(`DELETE FROM queue`);
+  await pool.query(`DELETE FROM song`);
+  await pool.end();
 });
 
-socket.on("queue-updated", (queue) => {
+describe('roomHandler', () => {
+  it('émet user-joined après join-room', async () => {
+    const promise = waitFor(clientSocket, 'user-joined');
+    // Envoyer un objet pour correspondre à roomHandler.js
+    clientSocket.emit('join-room', { roomCode: 'TEST01' });
+    const data = await promise;
 
-  console.log("File d'attente :");
-
-  console.log(queue);
-
+    expect(data).toHaveProperty('userId');
+    expect(typeof data.userId).toBe('string');
+  }, TIMEOUT);
 });
 
-socket.on("skip-updated", (data) => {
+describe('queueHandler', () => {
+  it('met à jour la file après add-song', async () => {
+    clientSocket.emit('join-room', { roomCode: 'TEST02' });
+    await waitFor(clientSocket, 'user-joined');
 
-  console.log(
-    `Votes skip : ${data.votes}`
-  );
+    const promise = waitFor(clientSocket, 'queue-updated');
+    clientSocket.emit('add-song', { roomCode: 'TEST02', songTitle: 'Bohemian Rhapsody' });
+    const queue = await promise;
 
+    expect(Array.isArray(queue)).toBe(true);
+    // La queue contient des objets, vérifier le titre
+    expect(queue.some(item => item.titre === 'Bohemian Rhapsody')).toBe(true);
+  }, TIMEOUT);
+
+  it('accumule plusieurs chansons dans la file', async () => {
+    clientSocket.emit('join-room', { roomCode: 'TEST03' });
+    await waitFor(clientSocket, 'user-joined');
+
+    clientSocket.emit('add-song', { roomCode: 'TEST03', songTitle: 'Imagine' });
+    await waitFor(clientSocket, 'queue-updated');
+
+    const promise = waitFor(clientSocket, 'queue-updated');
+    clientSocket.emit('add-song', { roomCode: 'TEST03', songTitle: 'Wonderwall' });
+    const queue = await promise;
+
+    expect(queue.length).toBeGreaterThanOrEqual(2);
+    expect(queue.some(item => item.titre === 'Imagine')).toBe(true);
+    expect(queue.some(item => item.titre === 'Wonderwall')).toBe(true);
+  }, TIMEOUT);
 });
 
-socket.on("song-skipped", (data) => {
+describe('voteHandler', () => {
+  it('incrémente le compteur de votes skip', async () => {
+    clientSocket.emit('join-room', { roomCode: 'TEST04' });
+    await waitFor(clientSocket, 'user-joined');
 
-  console.log(
-    `Chanson retirée : ${data.skippedSong}`
-  );
+    clientSocket.emit('add-song', { roomCode: 'TEST04', songTitle: 'Billie Jean' });
+    await waitFor(clientSocket, 'queue-updated');
 
+    const promise = waitFor(clientSocket, 'skip-updated');
+    clientSocket.emit('vote-skip', { roomCode: 'TEST04' });
+    const data = await promise;
+
+    expect(data).toHaveProperty('votes');
+    expect(data.votes).toBe(1);
+  }, TIMEOUT);
+
+  it('skip la chanson quand 2 votes atteints', async () => {
+    clientSocket.emit('join-room', { roomCode: 'TEST05' });
+    await waitFor(clientSocket, 'user-joined');
+
+    clientSocket.emit('add-song', { roomCode: 'TEST05', songTitle: 'Purple Rain' });
+    await waitFor(clientSocket, 'queue-updated');
+
+    clientSocket.emit('vote-skip', { roomCode: 'TEST05' });
+    await waitFor(clientSocket, 'skip-updated');
+
+    const skippedPromise = waitFor(clientSocket, 'song-skipped');
+    const queuePromise = waitFor(clientSocket, 'queue-updated');
+    clientSocket.emit('vote-skip', { roomCode: 'TEST05' });
+
+    const skipped = await skippedPromise;
+    const queue = await queuePromise;
+
+    expect(skipped).toHaveProperty('skippedSong');
+    expect(skipped.skippedSong.titre).toBe('Purple Rain');
+    expect(queue.some(item => item.titre === 'Purple Rain')).toBe(false);
+  }, TIMEOUT);
+
+  it('remet les votes à 0 après un skip', async () => {
+    clientSocket.emit('join-room', { roomCode: 'TEST06' });
+    await waitFor(clientSocket, 'user-joined');
+
+    clientSocket.emit('add-song', { roomCode: 'TEST06', songTitle: 'Hotel California' });
+    await waitFor(clientSocket, 'queue-updated');
+
+    clientSocket.emit('vote-skip', { roomCode: 'TEST06' });
+    await waitFor(clientSocket, 'skip-updated');
+    clientSocket.emit('vote-skip', { roomCode: 'TEST06' });
+    await waitFor(clientSocket, 'song-skipped');
+
+    clientSocket.emit('add-song', { roomCode: 'TEST06', songTitle: 'Stairway to Heaven' });
+    await waitFor(clientSocket, 'queue-updated');
+
+    const promise = waitFor(clientSocket, 'skip-updated');
+    clientSocket.emit('vote-skip', { roomCode: 'TEST06' });
+    const data = await promise;
+
+    expect(data.votes).toBe(1);
+  }, TIMEOUT);
 });

@@ -1,128 +1,149 @@
-/**
- * HomeView.js
- * Pure presentational component for the Home screen
- */
-
 import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
   StatusBar,
+  Image,
+  useWindowDimensions,
+  ScrollView,
 } from 'react-native';
+import styles from './viewStyles/HomeView.styles';
+import GlowStar from '../components/GlowStar';
+import { FloatingNote, FloatingSparkle } from '../components/FloatingDecor';
+import PopularSongsSection from '../components/PopularSongsSection';
 
-export default function HomeView({ onCreateLobby, onJoinLobby }) {
+export default function HomeView({
+  onCreateLobby,
+  onJoinLobby,
+  topSongs = [],
+  statsLoading = false,
+}) {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 640;
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.container}>
 
-        {/* Title block */}
-        <View style={styles.titleBlock}>
-          <Text style={styles.emoji}>🎤</Text>
-          <Text style={styles.title}>KARAOKE</Text>
-          <Text style={styles.subtitle}>sing together, anywhere</Text>
-        </View>
-
-        {/* Action buttons */}
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={onCreateLobby}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonIcon}>✦</Text>
-            <Text style={styles.buttonText}>Create Lobby</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={onJoinLobby}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonIcon}>→</Text>
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
-              Join Lobby
-            </Text>
-          </TouchableOpacity>
-        </View>
-
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
+          style={styles.logo}
+        />
       </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          <GlowStar
+            size={240}
+            style={styles.starTopLeft}
+            opacity={0.9}
+            floatY={14}
+            rotateDeg={4}
+            duration={7800}
+          />
+          <GlowStar
+            size={170}
+            style={styles.starLeftMid}
+            opacity={0.75}
+            floatY={10}
+            rotateDeg={7}
+            duration={9200}
+            delay={400}
+          />
+          <GlowStar
+            size={150}
+            style={styles.starRightMid}
+            opacity={0.8}
+            floatY={12}
+            rotateDeg={6}
+            duration={6800}
+            delay={800}
+          />
+          <GlowStar
+            size={210}
+            style={styles.starBottomLeft}
+            opacity={0.85}
+            floatY={16}
+            rotateDeg={5}
+            duration={8400}
+            delay={200}
+          />
+          <GlowStar
+            size={190}
+            style={styles.starBottomCenter}
+            opacity={0.65}
+            floatY={11}
+            rotateDeg={8}
+            duration={9600}
+            delay={600}
+          />
+
+          <FloatingSparkle style={[styles.sparkle, styles.sparkle1]} duration={2400} />
+          <FloatingSparkle
+            style={[styles.sparkle, styles.sparkle2]}
+            size={16}
+            duration={2800}
+            delay={300}
+          />
+          <FloatingSparkle
+            style={[styles.sparkle, styles.sparkle3]}
+            size={14}
+            duration={2100}
+            delay={600}
+          />
+          <FloatingSparkle
+            style={[styles.sparkle, styles.sparkle4]}
+            size={20}
+            duration={2600}
+            delay={150}
+          />
+
+          <FloatingNote style={styles.noteSingle} duration={5200}>
+            ♪
+          </FloatingNote>
+          <FloatingNote style={styles.noteBeamed} duration={4800} delay={350} floatY={10}>
+            ♫
+          </FloatingNote>
+
+          <View style={styles.hero}>
+            <Text style={[styles.title, isCompact && styles.titleCompact]}>
+              KARAOKE O'NINE
+            </Text>
+            <Text style={styles.subtitle}>Ici, tout le monde est une star</Text>
+
+            <View
+              style={[
+                styles.buttonGroup,
+                isCompact && styles.buttonGroupCompact,
+              ]}
+            >
+              <TouchableOpacity
+                style={[styles.button, isCompact && styles.buttonCompact]}
+                onPress={onCreateLobby}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.buttonText}>Créer un salon</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, isCompact && styles.buttonCompact]}
+                onPress={onJoinLobby}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.buttonText}>Rejoindre un salon</Text>
+              </TouchableOpacity>
+            </View>
+
+            <PopularSongsSection topSongs={topSongs} loading={statsLoading} />
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#0D0D0D',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 60,
-  },
-  titleBlock: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  emoji: {
-    fontSize: 64,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 52,
-    fontWeight: '900',
-    letterSpacing: 12,
-    color: '#F5E642',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    letterSpacing: 3,
-    color: '#888',
-    textTransform: 'uppercase',
-    marginTop: 4,
-  },
-  buttonGroup: {
-    width: '100%',
-    gap: 14,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 4,
-    gap: 10,
-  },
-  buttonPrimary: {
-    backgroundColor: '#F5E642',
-  },
-  buttonSecondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: '#F5E642',
-  },
-  buttonIcon: {
-    fontSize: 18,
-    color: '#0D0D0D',
-    fontWeight: '700',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 2,
-    color: '#0D0D0D',
-    textTransform: 'uppercase',
-  },
-  buttonTextSecondary: {
-    color: '#F5E642',
-  },
-});

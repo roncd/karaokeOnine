@@ -13,7 +13,12 @@ const generateCode = () => {
 // POST /api/salons -> création salon
 router.post('/', async (req, res) => {
   try {
-    const code = generateCode();
+    // Vérification si le code existe déjà
+    do {
+      code = generateCode();
+      existing = await pool.query('SELECT * FROM salon WHERE code = $1', [code]);
+    } while (existing.rows.length > 0);
+    
     const result = await pool.query(
       `INSERT INTO salon (code, status) VALUES ($1, 'En attente') RETURNING *`,
       [code]

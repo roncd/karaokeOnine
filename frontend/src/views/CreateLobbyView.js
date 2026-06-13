@@ -1,143 +1,128 @@
-/**
- * CreateLobbyView.js
- * Displays the generated lobby ID and a share / start option
- */
-
 import React from 'react';
 import {
-  View,
+   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  ActivityIndicator,
+  Image,
+  TextInput,
+  Clipboard
 } from 'react-native';
 
-export default function CreateLobbyView({ lobbyId, onBack, onShare }) {
+import styles from './viewStyles/CreateLobbyView.styles';
+import AvatarPicker from '../components/AvatarPicker';
+
+export default function CreateLobbyView({
+  lobbyId,
+  onBack,
+  onShare,
+  onStart,
+  pseudo,
+  onChangePseudo,
+  avatarIndex,
+  onSelectAvatar,
+  onGenerate
+}) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.screenTitle}>New Lobby</Text>
-          <View style={{ width: 60 }} />
+        {/* Logo */}
+        <Image
+          source={require('../../assets/logo/logo_karaoke.png')}
+          style={styles.logo}
+        />
+
+        {/* Titre */}
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>Créer un salon</Text>
+          <Text style={styles.subtitle}>Générez un code unique à 6 caractères</Text>
         </View>
 
-        {/* ID display */}
+        {/* Code */}
         <View style={styles.idBlock}>
-          <Text style={styles.label}>YOUR LOBBY CODE</Text>
+          <View
+            style={[
+              styles.input,
+              {
+                justifyContent: 'center',
+                alignItems: 'center',
+                position: 'relative'
+              }
+            ]}
+          >
+            {/* Texte centré */}
+            <Text
+              style={{
+                color: lobbyId ? '#F5E642' : 'rgba(245,230,66,0.3)',
+                fontSize: 26,
+                fontWeight: '900',
+                letterSpacing: 16,
+                textAlign: 'center',
+              }}
+            >
+              {lobbyId || '------'}
+            </Text>
 
-          {lobbyId ? (
-            <View style={styles.codeRow}>
-              {lobbyId.split('').map((char, i) => (
-                <View key={i} style={styles.charBox}>
-                  <Text style={styles.charText}>{char}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <ActivityIndicator color="#F5E642" size="large" />
-          )}
-
-          <Text style={styles.hint}>Share this code with your friends</Text>
+            {/* Bouton copier en position absolue */}
+            {lobbyId && (
+              <TouchableOpacity
+                onPress={() => Clipboard.setString(lobbyId)}
+                style={{
+                  position: 'absolute',
+                  right: 16,
+                  padding: 4,
+                }}
+              >
+                <Image
+                  source={require('../../assets/icon/copie-icon.png')}
+                  style={styles.copyIcon}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        {/* Actions */}
+        {/* Pseudo */}
+        <View style={styles.titleBlock}>
+          <Text style={{ color: '#fff', opacity: 0.7 }}>Votre pseudo</Text>
+        </View>
+
+        <View style={styles.idBlock}>
+          <TextInput
+            style={styles.pseudoInput}
+            value={pseudo}
+            onChangeText={onChangePseudo}
+            placeholder="Entrez votre pseudo"
+            placeholderTextColor="rgba(255,255,255,0.3)"
+          />
+        </View>
+
+        {/* Avatar */}
+        <View style={styles.titleBlock}>
+          <Text style={{ color: '#fff', opacity: 0.7 }}>Votre avatar</Text>
+        </View>
+        <AvatarPicker selected={avatarIndex} onSelect={onSelectAvatar} />
+
+        {/* Boutons */}
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.shareBtn}
-            onPress={onShare}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.shareBtnText}>Share Code</Text>
+          <TouchableOpacity style={styles.generateBtn} onPress={onGenerate} activeOpacity={0.8}>
+            <Text style={styles.generateBtnText}>Générer</Text>
           </TouchableOpacity>
+
+          {onStart && (
+            <TouchableOpacity
+              style={styles.startBtn}
+              onPress={onStart}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.startBtnText}>Démarrer le salon</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#0D0D0D',
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  backBtn: { width: 60 },
-  backText: { color: '#888', fontSize: 15 },
-  screenTitle: {
-    color: '#F5E642',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-  },
-  idBlock: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 24,
-  },
-  label: {
-    color: '#555',
-    fontSize: 11,
-    letterSpacing: 4,
-    textTransform: 'uppercase',
-  },
-  codeRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  charBox: {
-    width: 48,
-    height: 64,
-    borderWidth: 1.5,
-    borderColor: '#F5E642',
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  charText: {
-    color: '#F5E642',
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: 0,
-  },
-  hint: {
-    color: '#555',
-    fontSize: 13,
-    letterSpacing: 1,
-  },
-  actions: {
-    gap: 12,
-  },
-  shareBtn: {
-    backgroundColor: '#F5E642',
-    paddingVertical: 18,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
-  shareBtnText: {
-    color: '#0D0D0D',
-    fontWeight: '800',
-    fontSize: 15,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-});

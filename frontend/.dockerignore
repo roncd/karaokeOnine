@@ -9,6 +9,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 .expo
+.expo-shared
 
 coverage
 dist
@@ -17,7 +18,13 @@ build
 .env
 .env.*
 !.env.example
+!.env.exemple
 
 *.log
 tmp
 temp
+
+README.md
+**/*.md
+**/*.test.js
+**/*.spec.js

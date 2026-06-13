@@ -15,7 +15,12 @@ build
 .env
 .env.*
 !.env.example
+!.env.exemple
 
 *.log
 tmp
 temp
+
+README.md
+**/*.md
+src/tests
