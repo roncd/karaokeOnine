@@ -22,10 +22,44 @@ import {
   Platform,
   Image,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import styles from './viewStyles/LobbyView.styles';
 import PopularSongsSection from '../components/PopularSongsSection';
+import GlowStar from '../components/GlowStar';
 import useTopSongs from '../hooks/useTopSongs';
+
+// ─── Icône micro (sans emoji) ────────────────────────────────────────────────
+function MicGlyph({ enabled }) {
+  return (
+    <View style={[styles.micGlyph, !enabled && styles.micGlyphMuted]}>
+      <View style={styles.micGlyphHead} />
+      <View style={styles.micGlyphArc} />
+      <View style={styles.micGlyphStem} />
+      {!enabled && <View style={styles.micGlyphSlash} />}
+    </View>
+  );
+}
+
+// ─── Bouton micro ────────────────────────────────────────────────────────────
+function MicToggle({ micEnabled, onToggleMic }) {
+  return (
+    <TouchableOpacity
+      style={[styles.micBar, micEnabled && styles.micBarOn]}
+      onPress={onToggleMic}
+      activeOpacity={0.85}
+    >
+      <View style={[styles.micIndicator, micEnabled ? styles.micIndicatorOn : styles.micIndicatorOff]} />
+      <View style={styles.micTextWrap}>
+        <Text style={styles.micTitle}>{micEnabled ? 'Micro activé' : 'Micro coupé'}</Text>
+        <Text style={styles.micSubtitle}>
+          {micEnabled ? 'Les autres joueurs t\'entendent' : 'Appuie pour parler au salon'}
+        </Text>
+      </View>
+      <MicGlyph enabled={micEnabled} />
+    </TouchableOpacity>
+  );
+}
 
 // ─── Logo étoile O'9 ────────────────────────────────────────────────────────
 function StarLogo({ isHost }) {
@@ -221,9 +255,7 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity onPress={onToggleMic}>
-        <Text>{micEnabled ? "🎤 Micro ON" : "🔇 Micro OFF"}</Text>
-      </TouchableOpacity>
+      <MicToggle micEnabled={micEnabled} onToggleMic={onToggleMic} />
 
       {/* Modal ajout chanson */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -276,7 +308,12 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
                       <Text style={styles.songItemTitle}>{item.titre}</Text>
                       <Text style={styles.songItemArtiste}>{item.artiste}</Text>
                     </View>
-                    <Text style={styles.songItemGenre}>{item.genre}</Text>
+                    <View style={styles.songItemAction}>
+                      <Text style={styles.songItemGenre}>{item.genre}</Text>
+                      <View style={styles.songItemAddBtn}>
+                        <Text style={styles.songItemAddText}>Proposer</Text>
+                      </View>
+                    </View>
                   </TouchableOpacity>
                 )}
                 style={styles.songList}
@@ -292,19 +329,17 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
 
 // ─── Vue PARTICIPANT : catalogue ─────────────────────────────────────────────
 const GENRES = [
-  { label: 'Pop', emoji: '🎵' },
-//  { label: 'Rock', emoji: '🎸' },
-  { label: 'Hip-Hop', emoji: '🎤' },
-  { label: 'R&B', emoji: '🎶' },
-  { label: 'Soul', emoji: '🎼' },
-  { label: 'Funk', emoji: '🕺' },
-  { label: 'Variété française', emoji: '🇫🇷' },
-  //bug avec les accents dans les genres, à régler plus tard
-  //taille de la page a regler, bug
-  //emoji a retirer
+  { label: 'Pop', short: 'POP', accent: '#F5E642' },
+  { label: 'Hip-Hop', short: 'HH', accent: '#7DD3FC' },
+  { label: 'R&B', short: 'R&B', accent: '#C4B5FD' },
+  { label: 'Soul', short: 'SOUL', accent: '#FDBA74' },
+  { label: 'Funk', short: 'FUNK', accent: '#86EFAC' },
+  { label: 'Variété française', short: 'FR', accent: '#FCA5A5' },
 ];
 
 function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic, topSongs, topSongsLoading }) {
+  const { width } = useWindowDimensions();
+  const cardWidth = width >= 900 ? '31.5%' : width >= 640 ? '47%' : '100%';
   const [songs, setSongs] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -382,38 +417,68 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
   };
 
   return (
-    <ScrollView style={styles.flex} showsVerticalScrollIndicator={false}>
-      {/* Titre catalogue */}
-      <View style={styles.catalogueHeader}>
+    <ScrollView
+      style={styles.flex}
+      contentContainerStyle={styles.catalogueScroll}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.catalogueHero}>
+        <GlowStar
+          size={44}
+          opacity={0.3}
+          floatY={6}
+          style={styles.heroStar}
+        />
         <Text style={styles.catalogueTitle}>Catalogue</Text>
-        {/* <TouchableOpacity onPress={handleOpenSearch}>
-          <Text style={styles.searchIcon}>🔍</Text>
-        </TouchableOpacity> */}
+        <Text style={styles.catalogueSubtitle}>
+          Choisis un genre ou cherche un titre à proposer au salon
+        </Text>
       </View>
 
-      {/* Grille genres */}
+      <TouchableOpacity
+        style={styles.searchBar}
+        onPress={handleOpenSearch}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.searchBarIcon}>⌕</Text>
+        <Text style={styles.searchBarText}>Rechercher une chanson...</Text>
+      </TouchableOpacity>
+
+      <View style={styles.genreSectionHeader}>
+        <Text style={styles.genreSectionTitle}>Genres</Text>
+        <Text style={styles.genreSectionCount}>{GENRES.length} styles</Text>
+      </View>
+
       <View style={styles.genreGrid}>
         {GENRES.map((g) => (
           <TouchableOpacity
             key={g.label}
-            style={styles.genreCard}
+            style={[
+              styles.genreCard,
+              { width: cardWidth, borderColor: `${g.accent}44` },
+            ]}
             onPress={() => handleGenrePress(g.label)}
+            activeOpacity={0.88}
           >
-            <Text style={styles.genreEmoji}>{g.emoji}</Text>
+            <View style={[styles.genreAccent, { backgroundColor: g.accent }]} />
+            <View style={[styles.genreIconWrap, { backgroundColor: `${g.accent}18`, borderColor: `${g.accent}55` }]}>
+              <Text style={[styles.genreShort, { color: g.accent }]}>{g.short}</Text>
+            </View>
             <Text style={styles.genreLabel}>{g.label}</Text>
+            <Text style={[styles.genreExplore, { color: g.accent }]}>Explorer →</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <PopularSongsSection
-        topSongs={topSongs}
-        loading={topSongsLoading}
-        compact
-      />
+      <View style={styles.popularSection}>
+        <PopularSongsSection
+          topSongs={topSongs}
+          loading={topSongsLoading}
+          compact
+        />
+      </View>
 
-      <TouchableOpacity onPress={onToggleMic}>
-        <Text>{micEnabled ? "🎤 Micro ON" : "🔇 Micro OFF"}</Text>
-      </TouchableOpacity>
+      <MicToggle micEnabled={micEnabled} onToggleMic={onToggleMic} />
 
       {/* Modal liste de chansons */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -462,7 +527,12 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
                         {item.artiste}
                       </Text>
                     </View>
-                    <Text style={styles.songItemGenre}>{item.genre}</Text>
+                    <View style={styles.songItemAction}>
+                      <Text style={styles.songItemGenre}>{item.genre}</Text>
+                      <View style={styles.songItemAddBtn}>
+                        <Text style={styles.songItemAddText}>Proposer</Text>
+                      </View>
+                    </View>
                   </TouchableOpacity>
                 )}
                 style={styles.songList}
