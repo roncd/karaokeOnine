@@ -320,6 +320,98 @@ export default StyleSheet.create({
   popularSection: {
     marginTop: 24,
   },
+  audioPanel: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: 'rgba(245,230,66,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,230,66,0.45)',
+    gap: 10,
+  },
+  audioStatusPending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  audioStatusDotPending: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FBBF24',
+  },
+  audioStatusPendingText: {
+    color: YELLOW,
+    fontSize: 14,
+    fontWeight: '800',
+    ...Platform.select({
+      web: { fontFamily: '"Inter", sans-serif' },
+      default: {},
+    }),
+  },
+  audioPanelHint: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 13,
+    lineHeight: 19,
+    ...Platform.select({
+      web: { fontFamily: '"Inter", sans-serif' },
+      default: {},
+    }),
+  },
+  audioActivateBtn: {
+    marginTop: 4,
+    backgroundColor: YELLOW,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  audioActivateBtnLoading: {
+    opacity: 0.85,
+  },
+  audioActivateBtnText: {
+    color: '#0D0D0D',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+    ...Platform.select({
+      web: { fontFamily: '"Inter", sans-serif' },
+      default: {},
+    }),
+  },
+  audioStatusActive: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(74,222,128,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(74,222,128,0.35)',
+  },
+  audioStatusDotOn: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4ADE80',
+  },
+  audioStatusActiveText: {
+    flex: 1,
+    color: '#BBF7D0',
+    fontSize: 13,
+    fontWeight: '700',
+    ...Platform.select({
+      web: { fontFamily: '"Inter", sans-serif' },
+      default: {},
+    }),
+  },
   micBar: {
     marginTop: 24,
     flexDirection: 'row',
@@ -335,6 +427,9 @@ export default StyleSheet.create({
   micBarOn: {
     borderColor: 'rgba(245,230,66,0.45)',
     backgroundColor: 'rgba(245,230,66,0.08)',
+  },
+  micBarDisabled: {
+    opacity: 0.55,
   },
   micIndicator: {
     width: 10,

@@ -80,58 +80,27 @@ function registerReadyHandlers(io, socket) {
       }
     }, COUNTDOWN_SECONDS * 1000);
   });
-
+  
   socket.on('player-ready', async ({ roomCode }) => {
-    const userId = socketToUserId[socket.id];
-    if (!userId) {
-      console.warn('player-ready ignoré : utilisateur inconnu pour', socket.id);
-      return;
-    }
+  const userId = socketToUserId[socket.id];
 
-    const expectedSingerId = roomCurrentSingers[roomCode];
-    if (expectedSingerId != null && String(expectedSingerId) !== String(userId)) {
-      console.warn(`player-ready ignoré : ${userId} n'est pas le chanteur (${expectedSingerId})`);
-      return;
-    }
+  if (roomTimers[roomCode]) {
+    clearTimeout(roomTimers[roomCode]);
+    delete roomTimers[roomCode];
+  }
 
-    if (roomTimers[roomCode]) {
-      clearTimeout(roomTimers[roomCode]);
-      delete roomTimers[roomCode];
-    }
+  const currentSong = roomQueues[roomCode]?.[0] ?? null;
+  const songId = roomSongIds[roomCode]?.[0] ?? null;
 
-    delete roomCurrentSingers[roomCode];
+  const currentSinger = roomSingers[roomCode]?.[0] || null;
+  const singerId = currentSinger?.userId || userId;
 
-    const queueItem = roomQueues[roomCode]?.[0] ?? null;
-    const songId = roomSongIds[roomCode]?.[0] ?? queueItem?.id ?? null;
-    const currentSongTitle = queueItem?.titre ?? null;
-
-    // Persistance BDD (non bloquante)
-    if (songId) {
-      try {
-        const salonRes = await pool.query(
-          `SELECT id FROM salon WHERE code = $1`,
-          [roomCode]
-        );
-        if (salonRes.rows.length > 0) {
-          const salonId = salonRes.rows[0].id;
-          await pool.query(
-            `INSERT INTO queue (salon_id, user_id, song_id, position, status)
-             VALUES ($1, $2, $3, $4, 'En cours')
-             ON CONFLICT DO NOTHING`,
-            [salonId, userId, songId, 1]
-          );
-        }
-      } catch (err) {
-        console.warn('Erreur persistance player ready (non bloquante):', err.message);
-      }
-    }
-
-    io.to(roomCode).emit('singer-ready', {
-      singerId: userId,
-      currentSong: currentSongTitle,
-      songId,
-    });
+  io.to(roomCode).emit('singer-ready', {
+    singerId,
+    currentSong,
+    songId,
   });
+});
 
   socket.on('disconnect', () => {
     console.log(`Socket ${socket.id} déconnecté`);
