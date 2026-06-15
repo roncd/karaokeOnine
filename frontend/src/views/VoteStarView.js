@@ -31,7 +31,7 @@ const AVATARS = [
 
 function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted, onSelect }) {
   const avatar = AVATARS[avatarIndex % AVATARS.length] ?? AVATARS[0];
-  
+
   return (
     <TouchableOpacity
       style={styles.avatarWrapper}
@@ -54,11 +54,21 @@ function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted,
 }
 
 // ─── Écran résultat ───────────────────────────────────────────────────────────
-function WinnerScreen({ winner, onContinue }) {
+function WinnerScreen({ winner, participants, onContinue }) {
+  const winnerUser = participants.find(
+    p => String(p.userId) === String(winner.id)
+  );
+  console.log("winner.id =", winner.id);
+  console.log("participants =", participants);
+
+  const avatarIndex = winnerUser?.avatarIndex ?? 0;
+  const avatar = AVATARS[avatarIndex % AVATARS.length];
   return (
     <View style={styles.winnerContainer}>
       <Text style={styles.winnerTitle}>✦ La star de la soirée ! ✦</Text>
-      <View style={styles.winnerAvatarCircle} />
+      <View style={styles.winnerAvatarCircle}>
+        <Image source={avatar} style={styles.winnerAvatarImage} />
+      </View>
       <TouchableOpacity style={styles.continueBtn} onPress={onContinue}>
         <Text style={styles.continueBtnText}>Retour au salon</Text>
       </TouchableOpacity>
@@ -88,7 +98,7 @@ export default function VoteStarView({
         />
 
         {winner ? (
-          <WinnerScreen winner={winner} onContinue={onContinue} />
+          <WinnerScreen winner={winner} participants={participants} onContinue={onContinue} />
         ) : (
           <View style={styles.container}>
 
