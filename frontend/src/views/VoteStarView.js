@@ -67,6 +67,14 @@ function WinnerScreen({ winner, participants, onContinue }) {
     <View style={styles.winnerContainer}>
       <Text style={styles.winnerTitle}>✦ La star de la soirée ! ✦</Text>
       <View style={styles.winnerAvatarCircle}>
+        <Image source={avatar} style={styles.avatarImage} />
+      </View>
+      <Text style={{ color: '#F5E642', fontSize: 20, fontWeight: '800', marginTop: 12 }}>
+        {winner.pseudo}
+      </Text>
+      <Text style={{ color: '#fff', opacity: 0.6, fontSize: 14, marginTop: 4 }}>
+        {winner.votes} vote{winner.votes > 1 ? 's' : ''}
+      </Text>
         <Image source={avatar} style={styles.winnerAvatarImage} />
       </View>
       <TouchableOpacity style={styles.continueBtn} onPress={onContinue}>

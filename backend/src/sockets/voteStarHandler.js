@@ -59,9 +59,13 @@ function registerVoteStarHandlers(io, socket) {
 
       const winnerId = Object.entries(count).sort((a, b) => b[1] - a[1])[0][0];
 
+      const winnerParticipant = roomParticipants[roomCode]?.find(p => p.id == winnerId);
+
       io.to(roomCode).emit('vote-result', {
         winnerId,
         votes: count[winnerId],
+        winnerPseudo: winnerParticipant?.pseudo ?? 'Anonyme',
+        winnerAvatarIndex: winnerParticipant?.avatarIndex ?? 0,
       });
 
       delete roomVotesStar[roomCode];
