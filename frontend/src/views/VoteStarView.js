@@ -54,11 +54,21 @@ function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted,
 }
 
 // ─── Écran résultat ───────────────────────────────────────────────────────────
-function WinnerScreen({ winner, onContinue }) {
+    function WinnerScreen({ winner, participants, onContinue }) {
+  const avatar = AVATARS[(winner.avatarIndex ?? 0) % AVATARS.length];
+  
   return (
     <View style={styles.winnerContainer}>
       <Text style={styles.winnerTitle}>✦ La star de la soirée ! ✦</Text>
-      <View style={styles.winnerAvatarCircle} />
+      <View style={styles.winnerAvatarCircle}>
+        <Image source={avatar} style={styles.avatarImage} />
+      </View>
+      <Text style={{ color: '#F5E642', fontSize: 20, fontWeight: '800', marginTop: 12 }}>
+        {winner.pseudo}
+      </Text>
+      <Text style={{ color: '#fff', opacity: 0.6, fontSize: 14, marginTop: 4 }}>
+        {winner.votes} vote{winner.votes > 1 ? 's' : ''}
+      </Text>
       <TouchableOpacity style={styles.continueBtn} onPress={onContinue}>
         <Text style={styles.continueBtnText}>Retour au salon</Text>
       </TouchableOpacity>
@@ -88,7 +98,7 @@ export default function VoteStarView({
         />
 
         {winner ? (
-          <WinnerScreen winner={winner} onContinue={onContinue} />
+          <WinnerScreen winner={winner} participants={participants} onContinue={onContinue} />
         ) : (
           <View style={styles.container}>
 
