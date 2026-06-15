@@ -36,7 +36,7 @@ export default StyleSheet.create({
       default: {},
     }),
   },
-    avatarImage: {
+  avatarImage: {
     width: '100%',
     height: '100%',
     borderRadius: 32,
@@ -69,10 +69,16 @@ export default StyleSheet.create({
     borderColor: YELLOW,
     borderWidth: 2.5,
   },
+
   hostIcon: {
     width: 20,
     height: 20,
     resizeMode: 'contain',
+  },
+  winnerAvatarImage: {
+    width: 115,
+    height: 115,
+    borderRadius: 60,
   },
   // Bouton confirmer
   confirmBtn: {
