@@ -12,8 +12,10 @@ import {
   connectToRoom,
   disconnectFromRoom,
   toggleMicrophone,
-  enableLobbyMicrophones,
+  activateLobbyAudio,
   isMicEnabled,
+  isAudioUnlocked,
+  isRoomConnected,
 } from '../services/livekitService';
 import { useToast } from '../hooks/useToast';
 
@@ -28,6 +30,9 @@ export default function LobbyController({ route, navigation }) {
   const { toast, showToast } = useToast();
   const avatarIndexRef = useRef(avatarIndexParam ?? 0);
   const [micEnabled, setMicEnabled] = useState(false);
+  const [audioActive, setAudioActive] = useState(isAudioUnlocked());
+  const [livekitReady, setLivekitReady] = useState(isRoomConnected());
+  const [activatingAudio, setActivatingAudio] = useState(false);
 
   useEffect(() => {
     if (avatarIndexParam !== undefined) {
@@ -54,10 +59,14 @@ export default function LobbyController({ route, navigation }) {
     let cancelled = false;
 
     const setupLivekit = async () => {
-      await connectToRoom(lobbyId, userId);
-      const enabled = await enableLobbyMicrophones();
-      if (!cancelled) {
-        setMicEnabled(enabled ?? isMicEnabled());
+      const connected = await connectToRoom(lobbyId, userId);
+      if (cancelled) return;
+
+      setLivekitReady(Boolean(connected));
+
+      if (isAudioUnlocked()) {
+        setAudioActive(true);
+        setMicEnabled(isMicEnabled());
       }
     };
 
@@ -192,7 +201,30 @@ export default function LobbyController({ route, navigation }) {
     navigation.navigate('Home');
   };
 
+  const handleActivateAudio = async () => {
+    if (activatingAudio || audioActive) return;
+
+    setActivatingAudio(true);
+    try {
+      if (!livekitReady) {
+        const connected = await connectToRoom(lobbyId, userId);
+        setLivekitReady(Boolean(connected));
+        if (!connected) return;
+      }
+
+      const { audio, mic } = await activateLobbyAudio();
+      if (audio) {
+        setAudioActive(true);
+        setMicEnabled(Boolean(mic));
+      }
+    } finally {
+      setActivatingAudio(false);
+    }
+  };
+
   const handleToggleMic = async () => {
+    if (!audioActive) return;
+
     const newState = await toggleMicrophone();
     setMicEnabled(Boolean(newState));
   };
@@ -214,6 +246,10 @@ export default function LobbyController({ route, navigation }) {
       onMoveUp={handleMoveUp}
       onMoveDown={handleMoveDown}
       micEnabled={micEnabled}
+      audioActive={audioActive}
+      livekitReady={livekitReady}
+      activatingAudio={activatingAudio}
+      onActivateAudio={handleActivateAudio}
       onToggleMic={handleToggleMic}
     />
   );

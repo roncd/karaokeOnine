@@ -42,22 +42,69 @@ function MicGlyph({ enabled }) {
 }
 
 // ─── Bouton micro ────────────────────────────────────────────────────────────
-function MicToggle({ micEnabled, onToggleMic }) {
+function MicToggle({ micEnabled, onToggleMic, disabled }) {
   return (
     <TouchableOpacity
-      style={[styles.micBar, micEnabled && styles.micBarOn]}
+      style={[
+        styles.micBar,
+        micEnabled && styles.micBarOn,
+        disabled && styles.micBarDisabled,
+      ]}
       onPress={onToggleMic}
-      activeOpacity={0.85}
+      activeOpacity={disabled ? 1 : 0.85}
+      disabled={disabled}
     >
       <View style={[styles.micIndicator, micEnabled ? styles.micIndicatorOn : styles.micIndicatorOff]} />
       <View style={styles.micTextWrap}>
         <Text style={styles.micTitle}>{micEnabled ? 'Micro activé' : 'Micro coupé'}</Text>
         <Text style={styles.micSubtitle}>
-          {micEnabled ? 'Les autres joueurs t\'entendent' : 'Appuie pour parler au salon'}
+          {disabled
+            ? 'Active l\'audio du salon pour utiliser le micro'
+            : micEnabled
+              ? 'Les autres joueurs t\'entendent'
+              : 'Appuie pour parler au salon'}
         </Text>
       </View>
-      <MicGlyph enabled={micEnabled} />
+      <MicGlyph enabled={micEnabled && !disabled} />
     </TouchableOpacity>
+  );
+}
+
+// ─── Activation audio LiveKit ────────────────────────────────────────────────
+function AudioPanel({ audioActive, livekitReady, activatingAudio, onActivateAudio }) {
+  if (audioActive) {
+    return (
+      <View style={styles.audioStatusActive}>
+        <View style={styles.audioStatusDotOn} />
+        <Text style={styles.audioStatusActiveText}>Audio actif — tu entends et peux parler au salon</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.audioPanel}>
+      <View style={styles.audioStatusPending}>
+        <View style={styles.audioStatusDotPending} />
+        <Text style={styles.audioStatusPendingText}>En attente de ton clic</Text>
+      </View>
+      <Text style={styles.audioPanelHint}>
+        {livekitReady
+          ? 'Le navigateur exige un clic pour activer le micro et entendre les autres joueurs.'
+          : 'Connexion au salon vocal en cours…'}
+      </Text>
+      <TouchableOpacity
+        style={[styles.audioActivateBtn, activatingAudio && styles.audioActivateBtnLoading]}
+        onPress={onActivateAudio}
+        activeOpacity={0.88}
+        disabled={activatingAudio || !livekitReady}
+      >
+        {activatingAudio ? (
+          <ActivityIndicator color="#0D0D0D" size="small" />
+        ) : (
+          <Text style={styles.audioActivateBtnText}>Activer l'audio</Text>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -149,7 +196,7 @@ function QueueItemWithAvatar({ item, isHost, onDelete, onMoveUp, onMoveDown }) {
 // }
 
 // ─── Vue HÔTE : file d'attente ───────────────────────────────────────────────
-function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown, micEnabled, onToggleMic, topSongs, topSongsLoading }) {
+function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount, onStartSong, onDeleteSong, onMoveUp, onMoveDown, micEnabled, onToggleMic, audioActive, topSongs, topSongsLoading }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [songInput, setSongInput] = useState('');
   const [songs, setSongs] = useState([]);
@@ -255,7 +302,11 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
         </TouchableOpacity>
       )}
 
-      <MicToggle micEnabled={micEnabled} onToggleMic={onToggleMic} />
+      <MicToggle
+        micEnabled={micEnabled}
+        onToggleMic={onToggleMic}
+        disabled={!audioActive}
+      />
 
       {/* Modal ajout chanson */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -337,7 +388,7 @@ const GENRES = [
   { label: 'Variété française', short: 'FR', accent: '#FCA5A5' },
 ];
 
-function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic, topSongs, topSongsLoading }) {
+function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onToggleMic, audioActive, topSongs, topSongsLoading }) {
   const { width } = useWindowDimensions();
   const cardWidth = width >= 900 ? '31.5%' : width >= 640 ? '47%' : '100%';
   const [songs, setSongs] = useState([]);
@@ -478,7 +529,11 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
         />
       </View>
 
-      <MicToggle micEnabled={micEnabled} onToggleMic={onToggleMic} />
+      <MicToggle
+        micEnabled={micEnabled}
+        onToggleMic={onToggleMic}
+        disabled={!audioActive}
+      />
 
       {/* Modal liste de chansons */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -565,6 +620,10 @@ export default function LobbyView({
   onMoveDown,
   micEnabled,
   onToggleMic,
+  audioActive,
+  livekitReady,
+  activatingAudio,
+  onActivateAudio,
 }) {
   const isHost = role === 'host';
   const { topSongs, loading: topSongsLoading } = useTopSongs();
@@ -586,6 +645,13 @@ export default function LobbyView({
           </TouchableOpacity>
         </View>
 
+        <AudioPanel
+          audioActive={audioActive}
+          livekitReady={livekitReady}
+          activatingAudio={activatingAudio}
+          onActivateAudio={onActivateAudio}
+        />
+
         {/* Contenu selon rôle */}
         <View style={styles.content}>
           {isHost ? (
@@ -602,6 +668,7 @@ export default function LobbyView({
               onMoveDown={onMoveDown}
               micEnabled={micEnabled}
               onToggleMic={onToggleMic}
+              audioActive={audioActive}
               topSongs={topSongs}
               topSongsLoading={topSongsLoading}
             />
@@ -614,6 +681,7 @@ export default function LobbyView({
               onStartSong={onStartSong}
               micEnabled={micEnabled}
               onToggleMic={onToggleMic}
+              audioActive={audioActive}
               topSongs={topSongs}
               topSongsLoading={topSongsLoading}
             />

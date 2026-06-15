@@ -4,8 +4,6 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Audio } from 'expo-av';
-import { Platform } from 'react-native';
 import LyricsView from '../views/LyricsView';
 import Toast from '../components/Toast';
 import { getSocket, joinRoom } from '../services/socketService';
@@ -16,14 +14,7 @@ import {
   enableLobbyMicrophones,
 } from '../services/livekitService';
 import { useToast } from '../hooks/useToast';
-
-if (Platform.OS === 'web' && !global.SyntheticPlatformEmitter) {
-  global.SyntheticPlatformEmitter = {
-    emit: () => { },
-    addListener: () => { },
-    removeListener: () => { },
-  };
-}
+import { createSongPlayer } from '../utils/songAudioPlayer';
 
 function parseLrc(lrcContent) {
   const lines = lrcContent.split('\n');
@@ -200,23 +191,19 @@ export default function LyricsController({ route, navigation }) {
         setLyricsLoading(false);
 
         try {
-          await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-          const { sound } = await Audio.Sound.createAsync(
-            { uri: `${API_URL}/api/songs/${songId}/audio` },
-            { shouldPlay: true }
-          );
+          const player = await createSongPlayer(`${API_URL}/api/songs/${songId}/audio`);
           if (!isMounted) {
-            sound.unloadAsync();
+            await player.unload();
             return;
           }
-          soundRef.current = sound;
+          soundRef.current = player;
         } catch (audioErr) {
           console.warn('Erreur lecture audio :', audioErr.message);
         }
 
         intervalRef.current = setInterval(async () => {
           if (!soundRef.current) return;
-          const status = await soundRef.current.getStatusAsync();
+          const status = await soundRef.current.getStatus();
           if (!status.isLoaded) return;
 
           const positionMs = status.positionMillis;
@@ -274,7 +261,7 @@ export default function LyricsController({ route, navigation }) {
     return () => {
       isMounted = false;
       clearInterval(intervalRef.current);
-      soundRef.current?.unloadAsync();
+      soundRef.current?.unload();
     };
   }, [songId]);
 
@@ -299,7 +286,7 @@ export default function LyricsController({ route, navigation }) {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
     clearInterval(intervalRef.current);
-    await soundRef.current?.stopAsync();
+    await soundRef.current?.stop();
     await enableLobbyMicrophones();
     navigation.replace('VoteStar', {
       lobbyId,
