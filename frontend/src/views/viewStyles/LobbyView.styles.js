@@ -330,6 +330,7 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(245,230,66,0.45)',
     gap: 10,
+    width:'30%',
   },
   audioStatusPending: {
     flexDirection: 'row',
@@ -353,7 +354,7 @@ export default StyleSheet.create({
   },
   audioPanelHint: {
     color: 'rgba(255,255,255,0.72)',
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 19,
     ...Platform.select({
       web: { fontFamily: '"Inter", sans-serif' },
@@ -364,7 +365,7 @@ export default StyleSheet.create({
     marginTop: 4,
     backgroundColor: YELLOW,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,

@@ -31,7 +31,7 @@ const AVATARS = [
 
 function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted, onSelect }) {
   const avatar = AVATARS[avatarIndex % AVATARS.length] ?? AVATARS[0];
-
+  
   return (
     <TouchableOpacity
       style={styles.avatarWrapper}
@@ -54,15 +54,9 @@ function AvatarItem({ userId, pseudo, avatarIndex, isHost, isSelected, hasVoted,
 }
 
 // ─── Écran résultat ───────────────────────────────────────────────────────────
-function WinnerScreen({ winner, participants, onContinue }) {
-  const winnerUser = participants.find(
-    p => String(p.userId) === String(winner.id)
-  );
-  console.log("winner.id =", winner.id);
-  console.log("participants =", participants);
-
-  const avatarIndex = winnerUser?.avatarIndex ?? 0;
-  const avatar = AVATARS[avatarIndex % AVATARS.length];
+    function WinnerScreen({ winner, participants, onContinue }) {
+  const avatar = AVATARS[(winner.avatarIndex ?? 0) % AVATARS.length];
+  
   return (
     <View style={styles.winnerContainer}>
       <Text style={styles.winnerTitle}>✦ La star de la soirée ! ✦</Text>
@@ -75,8 +69,6 @@ function WinnerScreen({ winner, participants, onContinue }) {
       <Text style={{ color: '#fff', opacity: 0.6, fontSize: 14, marginTop: 4 }}>
         {winner.votes} vote{winner.votes > 1 ? 's' : ''}
       </Text>
-        <Image source={avatar} style={styles.winnerAvatarImage} />
-      </View>
       <TouchableOpacity style={styles.continueBtn} onPress={onContinue}>
         <Text style={styles.continueBtnText}>Retour au salon</Text>
       </TouchableOpacity>
