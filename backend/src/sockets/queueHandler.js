@@ -50,20 +50,25 @@ function registerQueueHandlers(io, socket) {
   });
 
   socket.on('song-finished', ({ roomCode }) => {
-     console.log('song-finished reçu pour room:', roomCode);
+    console.log('song-finished reçu pour room:', roomCode);
+
+    // Retirer la chanson jouée
     if (roomQueues[roomCode]?.length > 0) {
       roomQueues[roomCode].shift();
-      if (roomSongIds[roomCode]?.length > 0) roomSongIds[roomCode].shift();
-      if (roomSingers[roomCode]?.length > 0) roomSingers[roomCode].shift();
+      roomSongIds[roomCode]?.shift();
+      roomSingers[roomCode]?.shift();
     }
-    // Émettre à TOUT le monde la file mise à jour
+
+    const remaining = roomQueues[roomCode]?.length ?? 0;
+
+    // Mettre à jour la queue pour tout le monde
     io.to(roomCode).emit('queue-updated', roomQueues[roomCode] || []);
-    // Émettre seulement à celui qui a fini
-    socket.emit('song-finished-ack', { 
-      remaining: roomQueues[roomCode]?.length ?? 0 
-    });
+
+    // Répondre au client qui a fini
+    socket.emit('song-finished-ack', { remaining });
   });
-  
+
+
   socket.on('remove-song', ({ roomCode, index }) => {
     if (!roomQueues[roomCode]) return;
     roomQueues[roomCode].splice(index, 1);

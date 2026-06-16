@@ -25,7 +25,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import styles from './viewStyles/LobbyView.styles';
-import PopularSongsSection from '../components/PopularSongsSection';
 import GlowStar from '../components/GlowStar';
 import useTopSongs from '../hooks/useTopSongs';
 
@@ -87,11 +86,7 @@ function AudioPanel({ audioActive, livekitReady, activatingAudio, onActivateAudi
         <View style={styles.audioStatusDotPending} />
         <Text style={styles.audioStatusPendingText}>En attente de ton clic</Text>
       </View>
-      <Text style={styles.audioPanelHint}>
-        {livekitReady
-          ? 'Le navigateur exige un clic pour activer le micro et entendre les autres joueurs.'
-          : 'Connexion au salon vocal en cours…'}
-      </Text>
+   
       <TouchableOpacity
         style={[styles.audioActivateBtn, activatingAudio && styles.audioActivateBtnLoading]}
         onPress={onActivateAudio}
@@ -263,11 +258,6 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
             <Text style={styles.emptyText}>La file est vide</Text>
             <Text style={styles.emptyHint}>Ajoutez une chanson pour commencer !</Text>
           </View>
-          <PopularSongsSection
-            topSongs={topSongs}
-            loading={topSongsLoading}
-            compact
-          />
         </>
       ) : (
         <FlatList
@@ -285,13 +275,6 @@ function HostView({ lobbyId, queue, skipVotes, onVoteSkip, onAddSong, userCount,
           )}
           style={styles.flex}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={(
-            <PopularSongsSection
-              topSongs={topSongs}
-              loading={topSongsLoading}
-              compact
-            />
-          )}
         />
       )}
 
@@ -519,14 +502,6 @@ function GuestView({ queue, skipVotes, onVoteSkip, onAddSong, micEnabled, onTogg
             <Text style={[styles.genreExplore, { color: g.accent }]}>Explorer →</Text>
           </TouchableOpacity>
         ))}
-      </View>
-
-      <View style={styles.popularSection}>
-        <PopularSongsSection
-          topSongs={topSongs}
-          loading={topSongsLoading}
-          compact
-        />
       </View>
 
       <MicToggle

@@ -36,7 +36,7 @@ export default StyleSheet.create({
       default: {},
     }),
   },
-    avatarImage: {
+  avatarImage: {
     width: '100%',
     height: '100%',
     borderRadius: 32,
@@ -69,10 +69,16 @@ export default StyleSheet.create({
     borderColor: YELLOW,
     borderWidth: 2.5,
   },
+
   hostIcon: {
     width: 20,
     height: 20,
     resizeMode: 'contain',
+  },
+  winnerAvatarImage: {
+    width: 115,
+    height: 115,
+    borderRadius: 60,
   },
   // Bouton confirmer
   confirmBtn: {
@@ -119,13 +125,21 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   winnerAvatarCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 3,
-    borderColor: YELLOW,
-  },
+  width: 120,
+  height: 120,
+  borderRadius: 60,
+  backgroundColor: 'rgba(255,255,255,0.2)',
+  borderWidth: 3,
+  borderColor: YELLOW,
+  overflow: 'hidden',  // ← ajouter
+  alignItems: 'center',  // ← ajouter
+  justifyContent: 'center',  // ← ajouter
+},
+avatarImage: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 60,  // ← changer de 32 à 60
+},
   winnerStar: {
     position: 'absolute',
     top: -12,

@@ -63,8 +63,8 @@ export default function VoteStarController({ route, navigation }) {
       );
     });
 
-    socket.on('vote-result', ({ winnerId, votes }) => {
-      setWinner({ id: winnerId, votes });
+    socket.on('vote-result', ({ winnerId, votes, winnerPseudo, winnerAvatarIndex }) => {
+      setWinner({ id: winnerId, votes, pseudo: winnerPseudo, avatarIndex: winnerAvatarIndex });
     });
 
     socket.on('connect_error', (err) => {
