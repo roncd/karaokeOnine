@@ -110,6 +110,44 @@ export default StyleSheet.create({
     marginTop: 4,
     marginBottom: 4,
   },
+
+  reactionBtn: {
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  backgroundColor: 'rgba(255,255,255,0.12)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginHorizontal: 6,
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.2)',
+},
+
+reactionIcon: {
+  width: 48,
+  height: 48,
+  tintColor: YELLOW,
+},
+
+participantCountContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6, // espace entre l’icône et le nombre
+},
+
+participantIcon: {
+  width: 20,
+  height: 20,
+  tintColor: YELLOW, // icône blanche si tu veux
+},
+
+participantCountText: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#fff', // texte blanc
+},
+
+
   skipBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   skipBarTrack: {
     flex: 1,
